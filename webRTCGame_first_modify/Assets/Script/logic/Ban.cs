@@ -9,6 +9,7 @@ public class Koma
 
 }
 
+[System.Serializable]
 public class Koma_ocelo:Koma
 {
     public enum Type
@@ -34,6 +35,7 @@ public class Koma_ocelo:Koma
     }
 }
 #endregion
+[System.Serializable]
 public class Masu<K>
     where K:Koma
 {
@@ -45,6 +47,7 @@ public class Masu<K>
     }
 }
 
+[System.Serializable]
 public class Ban<K>
     where K:Koma
 {

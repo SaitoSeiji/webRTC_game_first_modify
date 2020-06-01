@@ -9,25 +9,58 @@ public static class GameLogic_ocelo
     //反転
     public static void Reverse(Ban<Koma_ocelo> ban, Vector2Int pos)
     {
+        var koma = ban.GetKoma(pos);
+        HashSet<Koma_ocelo> reverseList = new HashSet<Koma_ocelo>();
         foreach(Vector2Int vec in EightVector.GetVec())
         {
-            if (IsSand(ban, pos, vec))
+            if (IsSand(ban, koma, pos, vec))
             {
-                SandAction(ban, pos, vec, (check) => check.Reverse());
+                SandAction(ban, koma, pos, vec, (check) =>
+                {
+                    if (check._type != koma._type) reverseList.Add(check);
+                });
             }
         }
+        foreach(var target in reverseList)
+        {
+            target.Reverse();
+        }
+    }
+    
+    //選択可能かどうか取得
+    public static bool IsPutEnable(Ban<Koma_ocelo> ban,Koma_ocelo koma, Vector2Int pos)
+    {
+        if (ban.GetKoma(pos) != null) return false;
+        foreach (Vector2Int vec in EightVector.GetVec())
+        {
+            if (IsSand(ban, koma, pos, vec))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
-
-    //選択可能箇所取得
-
+    public static List<Vector2Int> GetPutEnable(Ban<Koma_ocelo> ban,Koma_ocelo koma)
+    {
+        var result= new List<Vector2Int>();
+        for(int x = 0; x < 8; x++)
+        {
+            for(int y = 0; y < 8; y++)
+            {
+                var checkPos = new Vector2Int(x, y);
+                if (IsPutEnable(ban, koma, checkPos)) result.Add(checkPos);
+            }
+        }
+        return result;
+    }
     #endregion
 
-    public static bool IsSand(Ban<Koma_ocelo> ban,Vector2Int pos,Vector2Int vec)
+    public static bool IsSand(Ban<Koma_ocelo> ban,Koma_ocelo koma,Vector2Int pos,Vector2Int vec)
     {
         int count = 0;
-        var origine = ban.GetKoma(pos);
-        SandAction(ban, pos, vec,(check)=> {
+        var origine = koma;
+        SandAction(ban,koma, pos, vec,(check)=> {
             if (check == null)
             {
                 count = 0;
@@ -41,37 +74,11 @@ public static class GameLogic_ocelo
             }
         });
         return count > 0;
-        //var origine=ban.GetKoma(pos);
-        //if (origine == null)
-        //{
-        //    Debug.LogError($"pos is invalid num:pos={pos}");
-        //    return false;
-        //}
-
-        //int count = 1;
-        //var check = ban.GetKoma(pos + vec*count);
-        //while (true)
-        //{
-        //    if (check == null || check._type == origine._type)
-        //    {
-        //        break;
-        //    }
-        //    else
-        //    {
-        //        count++;
-        //        check = ban.GetKoma(pos + vec*count);
-        //        checkAction?.Invoke(check);
-        //    }
-        //}
-
-        //int reverceCout = (count - 1);
-
-        //return reverceCout > 0;
     }
 
-    static void SandAction(Ban<Koma_ocelo> ban, Vector2Int pos, Vector2Int vec, Action<Koma_ocelo> checkAction = null)
+    static void SandAction(Ban<Koma_ocelo> ban,Koma_ocelo koma, Vector2Int pos, Vector2Int vec, Action<Koma_ocelo> checkAction = null)
     {
-        var origine = ban.GetKoma(pos);
+        var origine = koma;
         if (origine == null)
         {
             Debug.LogError($"pos is invalid num:pos={pos}");
