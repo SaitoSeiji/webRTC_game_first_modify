@@ -1,7 +1,8 @@
 {
-    "name": "myScript",
+    "name": "package",
     "references": [
-        "GUID:10ea58769b5461f48a9f29eafc2678bc"
+        "GUID:a10a7408f1036a74baaa98d49d9f3902",
+        "GUID:f12aafacab75a87499e7e45c873ffab8"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

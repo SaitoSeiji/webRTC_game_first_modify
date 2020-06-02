@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class OceloController_mono : MonoBehaviour
 {
-    [SerializeField]OceloController _myoceloCtrl;
+    [SerializeField]public OceloController _myoceloCtrl;
     [SerializeField] OceloBanDisplayer _disp;
 
     [SerializeField] GameObject whiteTurn;
@@ -20,37 +20,23 @@ public class OceloController_mono : MonoBehaviour
             _disp.SyncKoma(_myoceloCtrl._MyBan);
         };
         _myoceloCtrl._callback_plChenge = SetTurnGuid;
-    }
-
-    [ContextMenu("setpl")]
-    void RandomSetPl()
-    {
-        var rand=Random.Range(0, 2);
-        if (rand == 0) _myoceloCtrl.SetMyPl(Koma_ocelo.Type.Black);
-        else _myoceloCtrl.SetMyPl(Koma_ocelo.Type.White);
-    }
-
-    [ContextMenu("gamestart")]
-    void Onclick_gameStart()
-    {
+        _myoceloCtrl._callback_gameStart = GameStart;
         _disp.Init();
         _disp._callback_masuclick = Onclick_putKoma;
+    }
+    #region callback
+    void GameStart()
+    {
         _mypl = _myoceloCtrl.myPl;
-        _myoceloCtrl._MyBan.SetMasu(new Koma_ocelo(Koma_ocelo.Type.White), new Vector2Int(3, 3));
-        _myoceloCtrl._MyBan.SetMasu(new Koma_ocelo(Koma_ocelo.Type.Black), new Vector2Int(3, 4));
-        _myoceloCtrl._MyBan.SetMasu(new Koma_ocelo(Koma_ocelo.Type.Black), new Vector2Int(4, 3));
-        _myoceloCtrl._MyBan.SetMasu(new Koma_ocelo(Koma_ocelo.Type.White), new Vector2Int(4, 4));
-        _myoceloCtrl.Action();
-        _myoceloCtrl.Action();
-        _myoceloCtrl.Action();
     }
 
     public void Onclick_putKoma(Vector2Int pos)
     {
-        _myoceloCtrl.SetKoma(pos,_mypl);
-        _myoceloCtrl.Action();
-        _myoceloCtrl.Action();
-        _myoceloCtrl.Action();
+        _mypl.SetKoma(pos);
+        //_myoceloCtrl.SetKoma(pos,_mypl);
+        //_myoceloCtrl.Action();
+        //_myoceloCtrl.Action();
+        //_myoceloCtrl.Action();
     }
     
     void SetTurnGuid()
@@ -66,4 +52,5 @@ public class OceloController_mono : MonoBehaviour
             whiteTurn.SetActive(true);
         }
     }
+    #endregion
 }

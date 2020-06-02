@@ -10,10 +10,11 @@ public class OceloPlayer
     public Koma_ocelo.Type _MyPlType { get { return _myPlType; } }
 
     protected OceloController _myOctrl;
-
-    public OceloPlayer(OceloController octrl,Koma_ocelo.Type myType)
+    protected GameControlOrder _myOrder;
+    public OceloPlayer(OceloController octrl,GameControlOrder order,Koma_ocelo.Type myType)
     {
         _myOctrl = octrl;
+        _myOrder = order;
         _myPlType = myType;
     }
     
@@ -28,29 +29,35 @@ public class OceloPlayer
 [System.Serializable]
 public class OceloPlayer_input : OceloPlayer
 {
-    public OceloPlayer_input(OceloController octrl, Koma_ocelo.Type myType):base(octrl,myType)
+    public OceloPlayer_input(OceloController octrl, GameControlOrder order, Koma_ocelo.Type myType):base(octrl,order,myType)
     {
     }
 
     public override void TurnAction()
     {
         base.TurnAction();
+    }
+
+    public void SetKoma(Vector2Int pos)
+    {
+        var message = new GameControlMessage_putKoma(this, pos);
+        _myOrder.MessageAction(message);
     }
 }
 public class OceloPlayer_auto : OceloPlayer
 {
-    public OceloPlayer_auto(OceloController octrl, Koma_ocelo.Type myType) : base(octrl, myType)
+    public OceloPlayer_auto(OceloController octrl, GameControlOrder order, Koma_ocelo.Type myType) : base(octrl, order, myType)
     {
     }
 
     public override void TurnAction()
     {
         base.TurnAction();
-        var list = GameLogic_ocelo.GetPutEnable(_myOctrl._MyBan,new Koma_ocelo(_MyPlType));
-        _myOctrl.SetKoma(list[0],this);
-        _myOctrl.Action();
-        _myOctrl.Action();
-        _myOctrl.Action();
+        WaitAction.Instance.CoalWaitAction(()=> {
+            var list = GameLogic_ocelo.GetPutEnable(_myOctrl._MyBan, new Koma_ocelo(_MyPlType));
+            var message = new GameControlMessage_putKoma(this, list[0]);
+            _myOrder.MessageAction(message);
+        },1.0f);
     }
 }
 
@@ -67,12 +74,15 @@ public class OceloController
     [SerializeField]Koma_ocelo.Type _nowPlType;
     public Koma_ocelo.Type _NowPlType { get { return _nowPlType; } }
 
+    public GameControlOrder _myorder { get; private set; }
+
     [SerializeField] Ban<Koma_ocelo> _myBan;
     public Ban<Koma_ocelo> _MyBan { get { return _myBan; } }
 
     public OceloPlayer_input myPl;
     public OceloPlayer_auto enemyPl;
 
+    public Action _callback_gameStart;
     public Action _callback_display;
     public Action _callback_plChenge;
     public Action _callback_waitInput;
@@ -80,22 +90,23 @@ public class OceloController
     public OceloController()
     {
         _myBan = new Ban<Koma_ocelo>(new Vector2Int(8, 8));
+        _myorder = new GameControlOrder(this);
         _gamestate = GameState.Display;
         _nowPlType = Koma_ocelo.Type.White;
     }
 
-    public void SetMyPl(Koma_ocelo.Type type)
+    public void SetMyPl(Koma_ocelo.Type playerType)
     {
-        if(type == Koma_ocelo.Type.Black)
+        if(playerType == Koma_ocelo.Type.Black)
         {
 
-            myPl = new OceloPlayer_input(this, Koma_ocelo.Type.Black);
-            enemyPl = new OceloPlayer_auto(this, Koma_ocelo.Type.White);
+            myPl = new OceloPlayer_input(this,_myorder, Koma_ocelo.Type.Black);
+            enemyPl = new OceloPlayer_auto(this, _myorder, Koma_ocelo.Type.White);
         }
         else
         {
-            myPl = new OceloPlayer_input(this, Koma_ocelo.Type.White);
-            enemyPl = new OceloPlayer_auto(this, Koma_ocelo.Type.Black);
+            myPl = new OceloPlayer_input(this, _myorder, Koma_ocelo.Type.White);
+            enemyPl = new OceloPlayer_auto(this, _myorder, Koma_ocelo.Type.Black);
         }
     }
 
@@ -162,5 +173,14 @@ public class OceloController
             result += "\n";
         }
         return result;
+    }
+
+    public void Init()
+    {
+        _MyBan.SetMasu(new Koma_ocelo(Koma_ocelo.Type.White), new Vector2Int(3, 3));
+        _MyBan.SetMasu(new Koma_ocelo(Koma_ocelo.Type.Black), new Vector2Int(3, 4));
+        _MyBan.SetMasu(new Koma_ocelo(Koma_ocelo.Type.Black), new Vector2Int(4, 3));
+        _MyBan.SetMasu(new Koma_ocelo(Koma_ocelo.Type.White), new Vector2Int(4, 4));
+        _callback_gameStart.Invoke();
     }
 }
