@@ -458,7 +458,7 @@ MonoBehaviour:
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 216560213456328363}
-          m_ObjectArgumentAssemblyTypeName: UIBase, Assembly-CSharp
+          m_ObjectArgumentAssemblyTypeName: UIBase, myScript
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -793,7 +793,7 @@ MonoBehaviour:
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 216560213456328363}
-          m_ObjectArgumentAssemblyTypeName: UIBase, Assembly-CSharp
+          m_ObjectArgumentAssemblyTypeName: UIBase, myScript
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -1001,7 +1001,7 @@ MonoBehaviour:
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 8070625352352429252}
-          m_ObjectArgumentAssemblyTypeName: UIBase, Assembly-CSharp
+          m_ObjectArgumentAssemblyTypeName: UIBase, myScript
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -1368,6 +1368,7 @@ GameObject:
   - component: {fileID: 216560212183506429}
   - component: {fileID: 216560212183506430}
   - component: {fileID: 216560212183506431}
+  - component: {fileID: 4158353360116557480}
   m_Layer: 0
   m_Name: RTC_UI
   m_TagString: Untagged
@@ -1419,6 +1420,7 @@ MonoBehaviour:
   _rtcType: 0
   sendText: {fileID: 216560213697128128}
   recieveText: {fileID: 216560211898668090}
+  _reciever: {fileID: 4158353360116557480}
 --- !u!114 &216560212183506430
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1449,6 +1451,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _connectState: 0
+--- !u!114 &4158353360116557480
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 216560212183506425}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a89dd3bc67700c04094d5c4f9f46960c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _octrl: {fileID: 0}
+  _rtcObj: {fileID: 0}
 --- !u!1 &216560212195448892
 GameObject:
   m_ObjectHideFlags: 0
@@ -2304,7 +2320,7 @@ MonoBehaviour:
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 3044755996036321493}
-          m_ObjectArgumentAssemblyTypeName: UIBase, Assembly-CSharp
+          m_ObjectArgumentAssemblyTypeName: UIBase, myScript
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -2590,7 +2606,7 @@ MonoBehaviour:
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 216560211899689724}
-          m_ObjectArgumentAssemblyTypeName: UIBase, Assembly-CSharp
+          m_ObjectArgumentAssemblyTypeName: UIBase, myScript
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -2720,7 +2736,7 @@ MonoBehaviour:
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 8070625352352429252}
-          m_ObjectArgumentAssemblyTypeName: UIBase, Assembly-CSharp
+          m_ObjectArgumentAssemblyTypeName: UIBase, myScript
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -2861,7 +2877,7 @@ MonoBehaviour:
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 216560211899689724}
-          m_ObjectArgumentAssemblyTypeName: UIBase, Assembly-CSharp
+          m_ObjectArgumentAssemblyTypeName: UIBase, myScript
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -4044,7 +4060,7 @@ MonoBehaviour:
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 216560212348189483}
-          m_ObjectArgumentAssemblyTypeName: UIBase, Assembly-CSharp
+          m_ObjectArgumentAssemblyTypeName: UIBase, myScript
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -4084,9 +4100,9 @@ RectTransform:
   m_Father: {fileID: 4806301869916326410}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 96.350006, y: -15}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &216560213495801370
@@ -4174,7 +4190,7 @@ MonoBehaviour:
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 4702303947509550385}
-          m_ObjectArgumentAssemblyTypeName: UIBase, Assembly-CSharp
+          m_ObjectArgumentAssemblyTypeName: UIBase, myScript
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -5920,7 +5936,7 @@ MonoBehaviour:
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 1001868415380593634}
-          m_ObjectArgumentAssemblyTypeName: UIBase, Assembly-CSharp
+          m_ObjectArgumentAssemblyTypeName: UIBase, myScript
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -6206,7 +6222,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &4806301868565118850
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7060,7 +7076,7 @@ MonoBehaviour:
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 3044755996036321493}
-          m_ObjectArgumentAssemblyTypeName: UIBase, Assembly-CSharp
+          m_ObjectArgumentAssemblyTypeName: UIBase, myScript
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 

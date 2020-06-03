@@ -26,6 +26,7 @@ public class RTCObject_server : MonoBehaviour
 
     [SerializeField] Text sendText;
     [SerializeField] Text recieveText;
+    [SerializeField] DataChannelReciever _reciever;
 
     RTCPeerConnection localConnection;
     private RTCDataChannel localDataChannel;
@@ -53,7 +54,10 @@ public class RTCObject_server : MonoBehaviour
         WebRTC.Initialize();
         //メッセージ受信時の処理
         onDataChannelMessage = new DelegateOnMessage(bytes => {
-            recieveText.text = System.Text.Encoding.UTF8.GetString(bytes);
+            var text = System.Text.Encoding.UTF8.GetString(bytes);
+            recieveText.text = text;
+            //recieveText.text = System.Text.Encoding.UTF8.GetString(bytes);
+            _reciever.RecieveMessage(text);
             if (!_connectRTC)
             {
                 SendMsg_data("Connected");

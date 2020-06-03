@@ -6,6 +6,7 @@ public class OceloController_mono : MonoBehaviour
 {
     [SerializeField]public OceloController _myoceloCtrl;
     [SerializeField] OceloBanDisplayer _disp;
+    [SerializeField] DataChannelReciever reciever;
 
     [SerializeField] GameObject whiteTurn;
     [SerializeField] GameObject blackTurn;
@@ -14,7 +15,7 @@ public class OceloController_mono : MonoBehaviour
 
     void Start()
     {
-        _myoceloCtrl = new OceloController();
+        _myoceloCtrl = new OceloController(reciever);
         _myoceloCtrl._callback_display = () =>
         {
             _disp.SyncKoma(_myoceloCtrl._MyBan);

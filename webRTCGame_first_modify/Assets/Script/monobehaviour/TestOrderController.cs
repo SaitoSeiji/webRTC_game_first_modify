@@ -9,7 +9,6 @@ public class TestOrderController : MonoBehaviour
     [ContextMenu("setpl")]
     void SetPl()
     {
-
         var rand = Random.Range(0, 2);
         if (rand == 0) _order.MessageAction(new GameControlMessage_setpl(Koma_ocelo.Type.Black));
         else _order.MessageAction(new GameControlMessage_setpl(Koma_ocelo.Type.White));
