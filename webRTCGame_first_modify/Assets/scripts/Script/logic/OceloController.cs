@@ -48,7 +48,8 @@ public class OceloPlayer_input : OceloPlayer
         _myOrder.MessageAction(message);
         if (isRTC)
         {
-            var json = JsonConverter.ToJson_full(message);
+            var remoteMessage = new GameControlMessage_RemotePut(pos);
+            var json = JsonConverter.ToJson_full(remoteMessage);
             Dcr.SendRTCMessage(json);
         }
     }

@@ -37,8 +37,8 @@ public class DataChannelReciever:MonoBehaviour
                 var data = JsonConverter.FromJson_full<GameControlMessage>(msg);
                 switch (data.type)
                 {
-                    case GameControlMessage.Type.PUTKOMA:
-                        var send= JsonConverter.FromJson_full<GameControlMessage_putKoma>(msg);
+                    case GameControlMessage.Type.PUTKOMA_REMOTE:
+                        var send= JsonConverter.FromJson_full<GameControlMessage_RemotePut>(msg);
                         _order.MessageAction(send);
                         break;
                 }

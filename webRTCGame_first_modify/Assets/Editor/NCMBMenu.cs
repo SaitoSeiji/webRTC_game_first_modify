@@ -6,7 +6,8 @@ namespace NCMB
 {
 	internal class NCMBMenu
 	{
-		[MenuItem ("NCMB/DeleteCurrentUserCache")]
+#if UNITY_EDITOR
+        [MenuItem ("NCMB/DeleteCurrentUserCache")]
 		private static void DeleteCurrentUserCache ()
 		{
 			File.Delete (Application.persistentDataPath + "/" + "currentUser");
@@ -19,4 +20,5 @@ namespace NCMB
 			return (File.Exists (Application.persistentDataPath + "/" + "currentUser"));
 		}
 	}
+#endif
 }

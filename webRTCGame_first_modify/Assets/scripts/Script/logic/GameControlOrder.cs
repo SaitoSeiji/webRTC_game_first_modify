@@ -10,7 +10,8 @@ public class GameControlMessage
     {
         NONE,
         SETPL,
-        PUTKOMA
+        PUTKOMA,
+        PUTKOMA_REMOTE
     }
     public Type type= Type.NONE;
 }
@@ -55,6 +56,29 @@ public class GameControlMessage_putKoma : GameControlMessage
         type = Type.PUTKOMA;
     }
 }
+
+public class GameControlMessage_RemotePut: GameControlMessage
+{
+    [SerializeField] int posx;
+    [SerializeField] int posy;
+    public Vector2Int _putpos
+    {
+        get
+        {
+            return new Vector2Int(posx, posy);
+        }
+        set
+        {
+            posx = value.x;
+            posy = value.y;
+        }
+    }
+    public GameControlMessage_RemotePut(Vector2Int putpos)
+    {
+        _putpos = putpos;
+        type = Type.PUTKOMA_REMOTE;
+    }
+}
 #endregion
 public class GameControlOrder
 {
@@ -82,7 +106,15 @@ public class GameControlOrder
         else if (message is GameControlMessage_putKoma)
         {
             var mymessage = (GameControlMessage_putKoma)message;
-            _myOctrl.SetKoma(mymessage._putpos,mymessage._player);
+            _myOctrl.SetKoma(mymessage._putpos, mymessage._player);
+            _myOctrl.Action();
+            _myOctrl.Action();
+            _myOctrl.Action();
+        }
+        else if (message is GameControlMessage_RemotePut)
+        {
+            var mymessage = (GameControlMessage_RemotePut)message;
+            _myOctrl.SetKoma(mymessage._putpos, _myOctrl.enemyPl);
             _myOctrl.Action();
             _myOctrl.Action();
             _myOctrl.Action();
