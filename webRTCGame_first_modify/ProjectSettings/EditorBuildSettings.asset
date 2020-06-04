@@ -4,5 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/ocero_romoteConnect.unity
+    guid: a0c74aef9baacb44c89ff7f384281b2c
   m_configObjects: {}
