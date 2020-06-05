@@ -22,7 +22,7 @@ namespace Tests
         [TestCase(5,-1,true)]
         public void Test_SetGetMasu(int x,int y,bool isOut)
         {
-            var koma = new Koma_ocelo( Koma_ocelo.Type.Black);
+            var koma = new Koma_ocelo( Koma_ocelo.KomaType.Black);
             _myBan.SetMasu(koma,new Vector2Int(x,y));
             var result = (isOut) ? null : koma;
             Assert.AreEqual(result, _myBan.GetKoma(new Vector2Int(x,y)));

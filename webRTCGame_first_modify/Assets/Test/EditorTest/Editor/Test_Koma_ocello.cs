@@ -14,12 +14,12 @@ namespace Tests
         [SetUp]
         public void SetUp()
         {
-            _myKoma = new Koma_ocelo(Koma_ocelo.Type.Black);
+            _myKoma = new Koma_ocelo(Koma_ocelo.KomaType.Black);
         }
 
-        [TestCase(Koma_ocelo.Type.Black)] 
-        [TestCase(Koma_ocelo.Type.White)]
-        public void Test_Reverse(Koma_ocelo.Type type)
+        [TestCase(Koma_ocelo.KomaType.Black)] 
+        [TestCase(Koma_ocelo.KomaType.White)]
+        public void Test_Reverse(Koma_ocelo.KomaType type)
         {
             _myKoma.SetType(type);
             _myKoma.Reverse();

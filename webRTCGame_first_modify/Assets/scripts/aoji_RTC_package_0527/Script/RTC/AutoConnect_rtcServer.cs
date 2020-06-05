@@ -12,7 +12,7 @@ public class AutoConnect_rtcServer : MonoBehaviour
         NONE,
         MATCHING,
         SDP,
-        CONNECTED,
+        CONNECTED_beforeCheck,
         DELETED
     }
     [SerializeField, NonEditable] ConnectState _connectState = ConnectState.NONE;
@@ -68,7 +68,7 @@ public class AutoConnect_rtcServer : MonoBehaviour
                 break;
             case NCMBStateData.MyNCMBstate.SENDED_ice:
                 _myRTCObject.RecieveIce_onclick();
-                _connectState = ConnectState.CONNECTED;
+                _connectState = ConnectState.CONNECTED_beforeCheck;
                 break;
         }
     }
@@ -87,14 +87,14 @@ public class AutoConnect_rtcServer : MonoBehaviour
             case NCMBStateData.MyNCMBstate.CONNECTED_sdp:
                 _myRTCObject.SendIce_onclick();
                 _myRTCObject.RecieveIce_onclick();
-                _connectState = ConnectState.CONNECTED;
+                _connectState = ConnectState.CONNECTED_beforeCheck;
                 break;
         }
     }
 
     void CheckRTCConnectUpdate()
     {
-        if (_connectState != ConnectState.CONNECTED) return;
+        if (_connectState != ConnectState.CONNECTED_beforeCheck) return;
         if (_myRTCObject._connectRTC)
         {
             _signalingNCMB.DeleteObject();
@@ -112,11 +112,11 @@ public class AutoConnect_rtcServer : MonoBehaviour
                 _chengeSDPInterbal.WaitStart();
                 Debug.Log($"{gameObject.name}:auto state update");
             }
-        }else if(_connectState== ConnectState.CONNECTED)
+        }else if(_connectState== ConnectState.CONNECTED_beforeCheck)
         {
             //RTCの接続が完了したかどうかを確認
             //接続していたらSendMsg_dataが成功し_myRTCObject._connectRTC=trueになるのでCheckRTCConnectUpdateでオブジェクトがデリートされる
-            if (_myRTCType == RTCTYPE.ANSWER) return;
+            if (_myRTCType == RTCTYPE.ANSWER)  return;
             if (!_checkConnectInterbal._waitNow)
             {
                 _checkConnectInterbal.WaitStart();

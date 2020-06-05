@@ -12,26 +12,31 @@ public class Koma
 [System.Serializable]
 public class Koma_ocelo:Koma
 {
-    public enum Type
+    public enum KomaType
     {
         Black,
         White
     }
-    public Type _type { get; private set; }
+    public KomaType _type { get; private set; }
 
-    public Koma_ocelo(Type type)
+    public Koma_ocelo(KomaType type)
     {
         _type = type;
     }
 
     public void Reverse()
     {
-        _type = (_type == Type.Black) ? Type.White : Type.Black;
+        _type = (_type == KomaType.Black) ? KomaType.White : KomaType.Black;
     }
 
-    public void SetType(Type type)
+    public void SetType(KomaType type)
     {
         _type = type;
+    }
+
+    public static KomaType GetAnatherType(KomaType type)
+    {
+        return (type == KomaType.Black) ? KomaType.White : KomaType.Black;
     }
 }
 #endregion

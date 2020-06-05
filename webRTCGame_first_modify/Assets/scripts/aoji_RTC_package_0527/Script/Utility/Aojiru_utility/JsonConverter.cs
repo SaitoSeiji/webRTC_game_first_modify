@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using FullSerializer;
 using HC.Common;
+using System.Text;
 
 public static class JsonConverter
 {
@@ -30,4 +31,5 @@ public static class JsonConverter
         var data = JsonUtility.FromJson<T>(json);
         return data;
     }
+    
 }
