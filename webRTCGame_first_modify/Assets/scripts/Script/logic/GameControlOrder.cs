@@ -25,11 +25,15 @@ public abstract class GameControlMessage
 
 public class GameControlMessage_setpl: GameControlMessage
 {
-    public Koma_ocelo.KomaType _playerType;
+    public Koma_ocelo.KomaType _playerKomaType;
+    public OceloPlayer.PlTYPE _plType;
+    public OceloPlayer.PlTYPE _enemyType;
 
-    public GameControlMessage_setpl(Koma_ocelo.KomaType playerType)
+    public GameControlMessage_setpl(OceloPlayer.PlTYPE plType, OceloPlayer.PlTYPE enemyType, Koma_ocelo.KomaType playerType)
     {
-        _playerType = playerType;
+        _plType = plType;
+        _enemyType = enemyType;
+        _playerKomaType = playerType;
     }
 
     protected override MessageType GetMessageType()
@@ -93,7 +97,7 @@ public class GameControlOrder
             case GameControlMessage.MessageType.SETPL:
                 {
                     var mymessage = (GameControlMessage_setpl)message;
-                    _myOctrl.SetMyPl(mymessage._playerType);
+                    _myOctrl.SetMyPl(mymessage._plType,mymessage._enemyType,mymessage._playerKomaType);
                     break;
                 }
             case GameControlMessage.MessageType.STARTGAME:

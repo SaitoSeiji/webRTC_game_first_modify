@@ -12,8 +12,9 @@ public class OceloController_mono : MonoBehaviour
     [SerializeField] GameObject whiteTurn;
     [SerializeField] GameObject blackTurn;
     [SerializeField] Text _userTypeDisplay;
+    [SerializeField] Text _winText;
 
-    [SerializeField]OceloPlayer_input _mypl;
+    [SerializeField]OceloPlayer _mypl;
 
     void Start()
     {
@@ -23,7 +24,9 @@ public class OceloController_mono : MonoBehaviour
             _disp.SyncKoma(_myoceloCtrl._MyBan);
         };
         _myoceloCtrl._callback_plChenge = SetTurnGuid;
+        _myoceloCtrl._callback_skipTurn = SetTurnGuid;
         _myoceloCtrl._callback_gameStart = GameStart;
+        _myoceloCtrl._callback_endGame = EndGame;
         _disp.Init();
         _disp._callback_masuclick = Onclick_putKoma;
     }
@@ -37,7 +40,9 @@ public class OceloController_mono : MonoBehaviour
 
     public void Onclick_putKoma(Vector2Int pos)
     {
-        _mypl.SetKoma(pos);
+        if (!(_mypl is IKomaPut)) return;
+        var inputer = _mypl as IKomaPut;
+        inputer.SetKoma(pos);
     }
     
     void SetTurnGuid()
@@ -52,6 +57,13 @@ public class OceloController_mono : MonoBehaviour
             blackTurn.SetActive(false);
             whiteTurn.SetActive(true);
         }
+    }
+
+    void EndGame(Koma_ocelo.KomaType winType)
+    {
+        _winText.gameObject.SetActive(true);
+        var plTypeText = (winType == Koma_ocelo.KomaType.Black) ? "黒" : "白";
+        _winText.text = $"{plTypeText}の勝利です";
     }
     #endregion
 }

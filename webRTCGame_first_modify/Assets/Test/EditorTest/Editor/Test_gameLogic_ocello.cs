@@ -26,7 +26,7 @@ namespace Tests
         public void Test_isSand(Koma_ocelo.KomaType komaType,int x,int y,int vx,int vy,bool expect)
         {
             var koma = new Koma_ocelo(komaType);
-            var result=GameLogic_ocelo.IsSand(_myBan,koma, new Vector2Int(x, y),new Vector2Int(vx,vy));
+            var result=GameLogic_ocelo.IsSand(_myBan,komaType, new Vector2Int(x, y),new Vector2Int(vx,vy));
             Assert.AreEqual(expect, result);
         }
 
@@ -35,8 +35,7 @@ namespace Tests
         [TestCase(Koma_ocelo.KomaType.White, 4, 2, true)]
         public void Test_putEnable(Koma_ocelo.KomaType komaType, int x, int y, bool expect)
         {
-            var koma = new Koma_ocelo(komaType);
-            var result = GameLogic_ocelo.IsPutEnable(_myBan,koma, new Vector2Int(x, y));
+            var result = GameLogic_ocelo.IsPutEnable(_myBan,komaType, new Vector2Int(x, y));
             Assert.AreEqual(expect, result);
         }
 

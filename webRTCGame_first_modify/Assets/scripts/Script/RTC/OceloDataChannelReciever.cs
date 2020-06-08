@@ -17,7 +17,7 @@ public class OceloDataChannelReciever : AbstractDataChannelReciever
             {
                 var offerPlType = SetPl();
                 var answerType = Koma_ocelo.GetAnatherType(offerPlType);
-                var plmessage = new GameControlMessage_setpl(answerType);
+                var plmessage = new GameControlMessage_setpl(OceloPlayer.PlTYPE.INPUT, OceloPlayer.PlTYPE.RTC, answerType);
                 SendOceloMessage(new OceloMessage(plmessage));
 
                 StartGame();
@@ -51,12 +51,12 @@ public class OceloDataChannelReciever : AbstractDataChannelReciever
     {
         var rand = Random.Range(0, 2);
         var setType = (rand == 0) ? Koma_ocelo.KomaType.Black : Koma_ocelo.KomaType.White;
-        _order.MessageAction(new GameControlMessage_setpl(setType));
+        _order.MessageAction(new GameControlMessage_setpl( OceloPlayer.PlTYPE.INPUT , OceloPlayer.PlTYPE.RTC,setType));
         return setType;
     }
     void SetPl(Koma_ocelo.KomaType type)
     {
-        _order.MessageAction(new GameControlMessage_setpl(type));
+        _order.MessageAction(new GameControlMessage_setpl(OceloPlayer.PlTYPE.INPUT, OceloPlayer.PlTYPE.RTC, type));
     }
 
     void StartGame()

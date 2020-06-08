@@ -4,9 +4,20 @@ using UnityEngine;
 using System;
 
 #region Player
+
+interface IKomaPut
+{
+    void SetKoma(Vector2Int pos);
+}
+
 [System.Serializable]
 public class OceloPlayer
 {
+    public enum PlTYPE
+    {
+        INPUT,AUTO,RTC
+    }
+
     [SerializeField] Koma_ocelo.KomaType _myPlType;
     public Koma_ocelo.KomaType _MyPlType { get { return _myPlType; } }
 
@@ -26,10 +37,25 @@ public class OceloPlayer
     }
 
     public virtual void TurnAction() { }
+
+    public static OceloPlayer CreatePlayer(PlTYPE pltype, OceloController octrl, GameControlOrder order, Koma_ocelo.KomaType myType)
+    {
+        switch (pltype)
+        {
+            case PlTYPE.INPUT:
+                return new OceloPlayer_input(octrl, order, myType);
+            case PlTYPE.AUTO:
+                return new OceloPlayer_auto(octrl, order, myType);
+            case PlTYPE.RTC:
+                return new OceloPlayer_rtc(octrl, order, myType);
+            default:
+                return null;
+        }
+    }
 }
 
 [System.Serializable]
-public class OceloPlayer_input : OceloPlayer
+public class OceloPlayer_input : OceloPlayer,IKomaPut
 {
     public bool isRTC { get; set; } = true;
 
@@ -42,7 +68,7 @@ public class OceloPlayer_input : OceloPlayer
         base.TurnAction();
     }
 
-    public void SetKoma(Vector2Int pos)
+    void IKomaPut.SetKoma(Vector2Int pos)
     {
         if (!IsMoveAble()) return;
         var message = new GameControlMessage_putKoma(_MyPlType, pos);
@@ -64,7 +90,7 @@ public class OceloPlayer_auto : OceloPlayer
     {
         base.TurnAction();
         WaitAction.Instance.CoalWaitAction(()=> {
-            var list = GameLogic_ocelo.GetPutEnable(_myOctrl._MyBan, new Koma_ocelo(_MyPlType));
+            var list = GameLogic_ocelo.GetPutEnable(_myOctrl._MyBan, _MyPlType);
             var message = new GameControlMessage_putKoma(_MyPlType, list[0]);
             _myOrder.MessageAction(message);
         },1.0f);
@@ -98,14 +124,16 @@ public class OceloController
     public Ban<Koma_ocelo> _MyBan { get { return _myBan; } }
 
     //ストラテジーにする？
-    public OceloPlayer_input myPl;
-    public OceloPlayer_rtc enemyPl;
+    public OceloPlayer myPl;
+    public OceloPlayer enemyPl;
 
     public Action _callback_gameStart;
     public Action _callback_display;
     public Action _callback_plChenge;
     public Action _callback_waitInput;
     public Action _callback_skipTurn;
+    public Action<Koma_ocelo.KomaType> _callback_endGame;
+
 
     public OceloController(OceloDataChannelReciever dcr)
     {
@@ -116,10 +144,10 @@ public class OceloController
         _dcr = dcr;
     }
 
-    public void SetMyPl(Koma_ocelo.KomaType playerType)
+    public void SetMyPl(OceloPlayer.PlTYPE plType,OceloPlayer.PlTYPE enemyType,Koma_ocelo.KomaType playerType)
     {
-        myPl = new OceloPlayer_input(this, _myorder, playerType);
-        enemyPl = new OceloPlayer_rtc(this, _myorder, Koma_ocelo.GetAnatherType(playerType));
+        myPl =OceloPlayer.CreatePlayer(plType, this, _myorder, playerType);
+        enemyPl= OceloPlayer.CreatePlayer(enemyType, this, _myorder, Koma_ocelo.GetAnatherType(playerType));
     }
     #region turnAction
     public void TurnAction()
@@ -137,8 +165,26 @@ public class OceloController
                 break;
             case GameState.PlChenge:
                 PlChenge();
-                _gamestate = GameState.WaitInput;
-                _callback_plChenge?.Invoke();
+                if (PutEnable())
+                {
+                    _gamestate = GameState.WaitInput;
+                    _callback_plChenge?.Invoke();
+                }
+                else
+                {
+                    PlChenge();
+                    if (PutEnable())
+                    {
+                        _gamestate = GameState.WaitInput;
+                        _callback_skipTurn?.Invoke();
+                        //_callback_plChenge?.Invoke();
+                    }
+                    else
+                    {
+                        var win = GameLogic_ocelo.CheckWin(_myBan, Koma_ocelo.KomaType.Black);
+                        _callback_endGame?.Invoke((win)? Koma_ocelo.KomaType.Black: Koma_ocelo.KomaType.White);
+                    }
+                }
                 break;
         }
     }
@@ -156,9 +202,9 @@ public class OceloController
     public void SetKoma(Vector2Int putPos,OceloPlayer pl)
     {
         if (!pl.IsMoveAble())return;
-        var koma = new Koma_ocelo(_nowPlType);
-        if (GameLogic_ocelo.IsPutEnable(_myBan, koma, putPos))
+        if (GameLogic_ocelo.IsPutEnable(_myBan, _nowPlType, putPos))
         {
+            var koma = new Koma_ocelo(_nowPlType);
             _myBan.SetMasu(koma, putPos);
             GameLogic_ocelo.Reverse(_myBan, putPos);
             _gamestate = GameState.Display;
@@ -169,11 +215,6 @@ public class OceloController
         }
     }
 
-    public void SkipTurn(OceloPlayer pl)
-    {
-        if (!pl.IsMoveAble()) return;
-        _gamestate = GameState.Display;
-    }
 
     public string OutLogBan()
     {
@@ -211,5 +252,12 @@ public class OceloController
         {
             return enemyPl;
         }
+    }
+
+    bool PutEnable()
+    {
+        var targetpl = GetPl(_nowPlType);
+        var list= GameLogic_ocelo.GetPutEnable(_MyBan, _nowPlType);
+        return list.Count > 0;
     }
 }
