@@ -9,15 +9,15 @@ public static class GameLogic_ocelo
     //反転
     public static void Reverse(Ban<Koma_ocelo> ban, Vector2Int pos)
     {
-        var koma = ban.GetKoma(pos);
+        var komaType = ban.GetKoma(pos)._type;
         HashSet<Koma_ocelo> reverseList = new HashSet<Koma_ocelo>();
         foreach(Vector2Int vec in EightVector.GetVec())
         {
-            if (IsSand(ban, koma, pos, vec))
+            if (IsSand(ban, komaType, pos, vec))
             {
-                SandAction(ban, koma, pos, vec, (check) =>
+                SandAction(ban, komaType, pos, vec, (check) =>
                 {
-                    if (check._type != koma._type) reverseList.Add(check);
+                    if (check._type != komaType) reverseList.Add(check);
                 });
             }
         }
@@ -28,12 +28,12 @@ public static class GameLogic_ocelo
     }
     
     //選択可能かどうか取得
-    public static bool IsPutEnable(Ban<Koma_ocelo> ban,Koma_ocelo koma, Vector2Int pos)
+    public static bool IsPutEnable(Ban<Koma_ocelo> ban, Koma_ocelo.KomaType komaType, Vector2Int pos)
     {
         if (ban.GetKoma(pos) != null) return false;
         foreach (Vector2Int vec in EightVector.GetVec())
         {
-            if (IsSand(ban, koma, pos, vec))
+            if (IsSand(ban, komaType, pos, vec))
             {
                 return true;
             }
@@ -41,7 +41,7 @@ public static class GameLogic_ocelo
         return false;
     }
 
-    public static List<Vector2Int> GetPutEnable(Ban<Koma_ocelo> ban,Koma_ocelo koma)
+    public static List<Vector2Int> GetPutEnable(Ban<Koma_ocelo> ban, Koma_ocelo.KomaType komaType)
     {
         var result= new List<Vector2Int>();
         for(int x = 0; x < 8; x++)
@@ -49,23 +49,39 @@ public static class GameLogic_ocelo
             for(int y = 0; y < 8; y++)
             {
                 var checkPos = new Vector2Int(x, y);
-                if (IsPutEnable(ban, koma, checkPos)) result.Add(checkPos);
+                if (IsPutEnable(ban, komaType, checkPos)) result.Add(checkPos);
             }
         }
         return result;
     }
+
+    public static bool CheckWin(Ban<Koma_ocelo> ban, Koma_ocelo.KomaType komaType)
+    {
+        int self=0;
+        int enemy=0;
+        for (int x = 0; x < 8; x++)
+        {
+            for (int y = 0; y < 8; y++)
+            {
+                var koma = ban.GetKoma(new Vector2Int(x, y));
+                if (koma == null) continue;
+                if (koma._type == komaType) self++;
+                else enemy++;
+            }
+        }
+        return self >= enemy;
+    }
     #endregion
 
-    public static bool IsSand(Ban<Koma_ocelo> ban,Koma_ocelo koma,Vector2Int pos,Vector2Int vec)
+    public static bool IsSand(Ban<Koma_ocelo> ban, Koma_ocelo.KomaType komaType, Vector2Int pos,Vector2Int vec)
     {
         int count = 0;
-        var origine = koma;
-        SandAction(ban,koma, pos, vec,(check)=> {
+        SandAction(ban,komaType, pos, vec,(check)=> {
             if (check == null)
             {
                 count = 0;
             }
-            else if(check._type==origine._type)
+            else if(check._type==komaType)
             {
             }
             else
@@ -76,14 +92,14 @@ public static class GameLogic_ocelo
         return count > 0;
     }
 
-    static void SandAction(Ban<Koma_ocelo> ban,Koma_ocelo koma, Vector2Int pos, Vector2Int vec, Action<Koma_ocelo> checkAction = null)
+    static void SandAction(Ban<Koma_ocelo> ban,Koma_ocelo.KomaType komaType, Vector2Int pos, Vector2Int vec, Action<Koma_ocelo> checkAction = null)
     {
-        var origine = koma;
-        if (origine == null)
-        {
-            Debug.LogError($"pos is invalid num:pos={pos}");
-            return;
-        }
+        //var origine = komaType;
+        //if (origine == null)
+        //{
+        //    Debug.LogError($"pos is invalid num:pos={pos}");
+        //    return;
+        //}
 
         int count = 1;
         var check = ban.GetKoma(pos + vec * count);
@@ -93,7 +109,7 @@ public static class GameLogic_ocelo
             if (check == null)
             {
                 break;
-            }else if(check._type == origine._type)
+            }else if(check._type == komaType)
             {
                 break;
             }

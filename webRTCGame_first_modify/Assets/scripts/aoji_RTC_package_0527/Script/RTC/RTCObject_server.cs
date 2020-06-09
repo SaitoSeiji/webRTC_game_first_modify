@@ -26,7 +26,7 @@ public class RTCObject_server : MonoBehaviour
 
     [SerializeField] Text sendText;
     [SerializeField] Text recieveText;
-    [SerializeField] DataChannelReciever _reciever;
+    [SerializeField] AbstractDataChannelReciever _reciever;
 
     RTCPeerConnection localConnection;
     private RTCDataChannel localDataChannel;
@@ -48,7 +48,6 @@ public class RTCObject_server : MonoBehaviour
     };
     private DelegateOnMessage onDataChannelMessage;//データチャンネル受信時のコールバック
 
-
     private void Awake()
     {
         WebRTC.Initialize();
@@ -56,9 +55,14 @@ public class RTCObject_server : MonoBehaviour
         onDataChannelMessage = new DelegateOnMessage(bytes => {
             var text = System.Text.Encoding.UTF8.GetString(bytes);
             recieveText.text = text;
-            //recieveText.text = System.Text.Encoding.UTF8.GetString(bytes);
-            _reciever.RecieveMessage(text);
-            if (!_connectRTC)
+            if (_reciever != null)
+            {
+                //始めて受け取るメッセージならAwakeMessageを呼ぶ
+                if (_connectRTC) _reciever.RecieveMessage(text);
+                else _reciever.AwakeMessage();
+            }
+            //未接続->answerは送り返す(answerする)
+            if (!_connectRTC&&_rtcType== RTCTYPE.ANSWER)
             {
                 SendMsg_data("Connected");
             }
