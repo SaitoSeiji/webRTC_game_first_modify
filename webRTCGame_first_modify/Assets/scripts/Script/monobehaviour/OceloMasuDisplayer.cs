@@ -18,8 +18,8 @@ public class OceloMasuDisplayer : MonoBehaviour
     public void SetSprite(Koma_ocelo koma)
     {
         if (koma == null) _myrenderer.sprite = _clear;
-        else if (koma._type == Koma_ocelo.KomaType.Black) _myrenderer.sprite = _black;
-        else if (koma._type == Koma_ocelo.KomaType.White) _myrenderer.sprite = _white;
+        else if (koma._Type == Koma_ocelo.KomaType.Black) _myrenderer.sprite = _black;
+        else if (koma._Type == Koma_ocelo.KomaType.White) _myrenderer.sprite = _white;
     }
 
     [ContextMenu("test_black")]

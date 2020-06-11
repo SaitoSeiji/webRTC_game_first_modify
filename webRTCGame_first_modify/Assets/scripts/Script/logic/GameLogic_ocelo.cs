@@ -9,7 +9,7 @@ public static class GameLogic_ocelo
     //反転
     public static void Reverse(Ban<Koma_ocelo> ban, Vector2Int pos)
     {
-        var komaType = ban.GetKoma(pos)._type;
+        var komaType = ban.GetKoma(pos)._Type;
         HashSet<Koma_ocelo> reverseList = new HashSet<Koma_ocelo>();
         foreach(Vector2Int vec in EightVector.GetVec())
         {
@@ -17,7 +17,7 @@ public static class GameLogic_ocelo
             {
                 SandAction(ban, komaType, pos, vec, (check) =>
                 {
-                    if (check._type != komaType) reverseList.Add(check);
+                    if (check._Type != komaType) reverseList.Add(check);
                 });
             }
         }
@@ -65,7 +65,7 @@ public static class GameLogic_ocelo
             {
                 var koma = ban.GetKoma(new Vector2Int(x, y));
                 if (koma == null) continue;
-                if (koma._type == komaType) self++;
+                if (koma._Type == komaType) self++;
                 else enemy++;
             }
         }
@@ -81,7 +81,7 @@ public static class GameLogic_ocelo
             {
                 count = 0;
             }
-            else if(check._type==komaType)
+            else if(check._Type==komaType)
             {
             }
             else
@@ -109,7 +109,7 @@ public static class GameLogic_ocelo
             if (check == null)
             {
                 break;
-            }else if(check._type == komaType)
+            }else if(check._Type == komaType)
             {
                 break;
             }

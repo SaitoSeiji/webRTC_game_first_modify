@@ -225,8 +225,8 @@ public class OceloController
             {
                 var masu = _myBan.GetKoma(new Vector2Int(x, y));
                 if (masu == null) result += "x";
-                else if (masu._type == Koma_ocelo.KomaType.Black) result += "●";
-                else if (masu._type == Koma_ocelo.KomaType.White) result += "○";
+                else if (masu._Type == Koma_ocelo.KomaType.Black) result += "●";
+                else if (masu._Type == Koma_ocelo.KomaType.White) result += "○";
             }
             result += "\n";
         }

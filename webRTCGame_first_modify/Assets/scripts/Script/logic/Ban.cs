@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
-
+#region archibe
 #region koma
 public class Koma
 {
@@ -14,24 +14,31 @@ public class Koma_ocelo:Koma
 {
     public enum KomaType
     {
-        Black,
-        White
+        NONE=0,
+        Black=1,
+        White=2
     }
-    public KomaType _type { get; private set; }
+    [SerializeField] KomaType _type;
+    public KomaType _Type { get { return _type; }set { _type = value; } }
 
     public Koma_ocelo(KomaType type)
     {
-        _type = type;
+        _Type = type;
+    }
+
+    public Koma_ocelo(int num)
+    {
+        _type = (KomaType)Enum.ToObject(typeof(KomaType), num);
     }
 
     public void Reverse()
     {
-        _type = (_type == KomaType.Black) ? KomaType.White : KomaType.Black;
+        _Type = (_Type == KomaType.Black) ? KomaType.White : KomaType.Black;
     }
 
     public void SetType(KomaType type)
     {
-        _type = type;
+        _Type = type;
     }
 
     public static KomaType GetAnatherType(KomaType type)
@@ -97,6 +104,59 @@ public class Ban<K>
         catch(IndexOutOfRangeException e)
         {
             return null;
+        }
+    }
+}
+#endregion
+
+public class Ban_new
+{
+    [SerializeField] List<List<int>> ban;
+
+    public Ban_new(int size)
+    {
+        ban = new List<List<int>>();
+        for (int i = 0; i < size; i++) ban.Add(new List<int>());
+        ban.ForEach(x =>
+        {
+            for (int i = 0; i < size; i++) x.Add(0);
+        });
+    }
+
+    public Koma_ocelo this[int x, int y]
+    {
+        get
+        {
+            var num = ban[x][y];
+            var result = new Koma_ocelo(num);
+            return result;
+        }
+        set
+        {
+            int num = (int)value._Type;
+            ban[x][y] = num;
+        }
+    }
+
+    public void SetBan(int[,] input)
+    {
+        try
+        {
+            for (int x = 0; x < ban.Count; x++)
+            {
+                for(int y = 0; y < ban[x].Count; y++)
+                {
+                    this[x, y] =new Koma_ocelo( input[x, y]);
+                }
+            }
+        }
+        catch(IndexOutOfRangeException e)
+        {
+            Debug.LogError($"サイズが違います:{e}");
+        }
+        catch(Exception e)
+        {
+            Debug.LogError($"その他の例外:{e}");
         }
     }
 }

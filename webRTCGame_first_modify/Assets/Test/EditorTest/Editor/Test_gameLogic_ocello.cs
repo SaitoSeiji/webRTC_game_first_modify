@@ -48,7 +48,7 @@ namespace Tests
             _myBan.SetMasu(koma, new Vector2Int(x, y));
             GameLogic_ocelo.Reverse(_myBan, new Vector2Int(x, y));
             var check = _myBan.GetKoma(new Vector2Int(ex, ey));
-            Assert.AreEqual(checkType, check._type);
+            Assert.AreEqual(checkType, check._Type);
         }
     }
 }
