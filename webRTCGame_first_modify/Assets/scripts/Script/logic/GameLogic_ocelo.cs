@@ -5,35 +5,39 @@ using System;
 
 public static class GameLogic_ocelo
 {
+    static int GetReverseNum(int num)
+    {
+        return GameControllData.GetOtherColor(num);
+    }
+
     #region public
     //反転
-    public static void Reverse(Ban<Koma_ocelo> ban, Vector2Int pos)
+    public static int[,] Reverse(int[,] banData, Vector2Int pos)
     {
-        var komaType = ban.GetKoma(pos)._Type;
-        HashSet<Koma_ocelo> reverseList = new HashSet<Koma_ocelo>();
+        var komaType = banData[pos.x,pos.y];
+        int[,] result = banData;
         foreach(Vector2Int vec in EightVector.GetVec())
         {
-            if (IsSand(ban, komaType, pos, vec))
+            if (IsSand(banData, komaType, pos, vec))
             {
-                SandAction(ban, komaType, pos, vec, (check) =>
+                SandAction(banData, komaType, pos, vec, (x,y) =>
                 {
-                    if (check._Type != komaType) reverseList.Add(check);
+                    var check = banData[x, y];
+                    if (check != komaType) result[x, y] = GetReverseNum(check);
                 });
             }
         }
-        foreach(var target in reverseList)
-        {
-            target.Reverse();
-        }
+
+        return result;
     }
     
     //選択可能かどうか取得
-    public static bool IsPutEnable(Ban<Koma_ocelo> ban, Koma_ocelo.KomaType komaType, Vector2Int pos)
+    public static bool IsPutEnable(int[,] banData, int komaType, Vector2Int pos)
     {
-        if (ban.GetKoma(pos) != null) return false;
+        if (banData[pos.x,pos.y] != 0) return false;
         foreach (Vector2Int vec in EightVector.GetVec())
         {
-            if (IsSand(ban, komaType, pos, vec))
+            if (IsSand(banData, komaType, pos, vec))
             {
                 return true;
             }
@@ -41,7 +45,7 @@ public static class GameLogic_ocelo
         return false;
     }
 
-    public static List<Vector2Int> GetPutEnable(Ban<Koma_ocelo> ban, Koma_ocelo.KomaType komaType)
+    public static List<Vector2Int> GetPutEnable(int[,] banData, int komaType)
     {
         var result= new List<Vector2Int>();
         for(int x = 0; x < 8; x++)
@@ -49,13 +53,13 @@ public static class GameLogic_ocelo
             for(int y = 0; y < 8; y++)
             {
                 var checkPos = new Vector2Int(x, y);
-                if (IsPutEnable(ban, komaType, checkPos)) result.Add(checkPos);
+                if (IsPutEnable(banData, komaType, checkPos)) result.Add(checkPos);
             }
         }
         return result;
     }
 
-    public static bool CheckWin(Ban<Koma_ocelo> ban, Koma_ocelo.KomaType komaType)
+    public static bool CheckWin(int[,] banData, int komaType)
     {
         int self=0;
         int enemy=0;
@@ -63,9 +67,9 @@ public static class GameLogic_ocelo
         {
             for (int y = 0; y < 8; y++)
             {
-                var koma = ban.GetKoma(new Vector2Int(x, y));
-                if (koma == null) continue;
-                if (koma._Type == komaType) self++;
+                var koma = banData[x, y];
+                if (koma == 0) continue;
+                if (koma == komaType) self++;
                 else enemy++;
             }
         }
@@ -73,15 +77,16 @@ public static class GameLogic_ocelo
     }
     #endregion
 
-    public static bool IsSand(Ban<Koma_ocelo> ban, Koma_ocelo.KomaType komaType, Vector2Int pos,Vector2Int vec)
+    public static bool IsSand(int[,] banData, int komaType, Vector2Int pos,Vector2Int vec)
     {
         int count = 0;
-        SandAction(ban,komaType, pos, vec,(check)=> {
-            if (check == null)
+        SandAction(banData,komaType, pos, vec,(x,y)=> {
+            var check = banData[x, y];
+            if (check == 0)
             {
                 count = 0;
             }
-            else if(check._Type==komaType)
+            else if(check==komaType)
             {
             }
             else
@@ -92,7 +97,7 @@ public static class GameLogic_ocelo
         return count > 0;
     }
 
-    static void SandAction(Ban<Koma_ocelo> ban,Koma_ocelo.KomaType komaType, Vector2Int pos, Vector2Int vec, Action<Koma_ocelo> checkAction = null)
+    static void SandAction(int[,] banData,int komaType, Vector2Int pos, Vector2Int vec,Action<int,int> checkAction=null)
     {
         //var origine = komaType;
         //if (origine == null)
@@ -101,27 +106,40 @@ public static class GameLogic_ocelo
         //    return;
         //}
 
+
         int count = 1;
-        var check = ban.GetKoma(pos + vec * count);
+        var targetPos = pos + vec * count;
+        if (!IsContainRange(banData, targetPos)) return;
+        var check = banData[targetPos.x, targetPos.y];
+        //var check = ban.GetKoma(pos + vec * count);
         while (true)
         {
-            checkAction?.Invoke(check);
-            if (check == null)
+            checkAction?.Invoke(targetPos.x,targetPos.y);
+            if (check == 0)
             {
                 break;
-            }else if(check._Type == komaType)
+            }else if(check ==komaType)
             {
                 break;
             }
             else
             {
                 count++;
-                check = ban.GetKoma(pos + vec * count);
+                targetPos = pos + vec * count;
+                if (!IsContainRange(banData, targetPos)) return;
+                check = banData[targetPos.x, targetPos.y];
             }
         }
-
     }
-
+    
+    public static bool IsContainRange(int[,] banData, Vector2Int pos)
+    {
+        Vector2Int range = new Vector2Int(0, (int)Mathf.Sqrt(banData.Length-1));
+        var newPos = new Vector2Int();
+        newPos.x = Mathf.Clamp(pos.x, range.x, range.y);
+        newPos.y = Mathf.Clamp(pos.y, range.x, range.y);
+        return newPos.x == pos.x && newPos.y == pos.y;
+    }
 
     public static class EightVector
     {

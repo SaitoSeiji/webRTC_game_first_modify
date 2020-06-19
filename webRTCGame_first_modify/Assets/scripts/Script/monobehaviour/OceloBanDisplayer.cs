@@ -38,13 +38,13 @@ public class OceloBanDisplayer : MonoBehaviour
         }
     }
 
-    public void SyncKoma(Ban<Koma_ocelo> ban)
+    public void SyncKoma(int[,] banData)
     {
         for(int x = 0; x < 8; x++)
         {
             for(int y = 0; y < 8; y++)
             {
-                _masus[x][y].SetSprite(ban.GetKoma(new Vector2Int(x, y)));
+                _masus[x][y].SetSprite(GameControllData.ConvertNum2Color(banData[x,y]));
             }
         }
     }

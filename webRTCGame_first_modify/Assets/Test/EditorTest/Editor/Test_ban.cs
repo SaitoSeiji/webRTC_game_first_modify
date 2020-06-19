@@ -8,86 +8,46 @@ namespace Tests
 {
     public class Test_ban
     {
-        [System.Serializable]
-        public class Test_jsonClass
-        {
-            [SerializeField] List<List<int>> ban;
-
-            public Test_jsonClass(int size)
-            {
-                ban = new List<List<int>>();
-                for (int i = 0; i < size; i++) ban.Add(new List<int>());
-                ban.ForEach(x =>
-                {
-                    for (int i = 0; i < size; i++) x.Add(0);
-                });
-            }
-
-            public int this[int x,int y]
-            {
-                get
-                {
-                    return ban[x][y];
-                }
-                set
-                {
-                    ban[x][y] = value;
-                }
-            }
-        }
-
-        Ban<Koma_ocelo> _myBan;
+        Ban_new ban;
 
         [SetUp]
         public void SetUp()
         {
-            _myBan = new Ban<Koma_ocelo>(new Vector2Int(8,8));
-        }
+            ban = new Ban_new(8);
 
-        [TestCase(1,1,false)]
-        [TestCase(4,4,false)]
-        [TestCase(8,4,true)]
-        [TestCase(5,-1,true)]
-        public void Test_SetGetMasu(int x,int y,bool isOut)
-        {
-            var koma = new Koma_ocelo( Koma_ocelo.KomaType.Black);
-            _myBan.SetMasu(koma,new Vector2Int(x,y));
-            var result = (isOut) ? null : koma;
-            Assert.AreEqual(result, _myBan.GetKoma(new Vector2Int(x,y)));
-        }
-
-        [Test]
-        public void Test_testHairetujson()
-        {
-            var ban = new Test_jsonClass(5);
-            ban[1, 1] = 5;
-            var json = JsonConverter.ToJson_full(ban);
-            Debug.Log(json);
-            var data = JsonConverter.FromJson_full<Test_jsonClass>(json);
-            Assert.AreEqual(ban[1, 1], data[1, 1]);
-        }
-        [Test]
-        public void Test_banNew()
-        {
-            var ban = new Ban_new(5);
-            ban[1, 1] = new Koma_ocelo(Koma_ocelo.KomaType.Black);
-            var json = JsonConverter.ToJson_full(ban);
-            Debug.Log(json);
-            var data = JsonConverter.FromJson_full<Ban_new>(json);
-            Assert.AreEqual(Koma_ocelo.KomaType.Black, data[1, 1]._Type);
-        }
-
-        [Test]
-        public void Test_banNew_syncBan()
-        {
-            var ban = new Ban_new(5);
-            var input = new int[,] { { 0,0,0,0,0}
-                                    ,{ 0,1,0,2,0}
-                                    ,{ 0,0,1,0,0}
-                                    ,{ 0,2,0,1,0}
-                                    ,{ 0,0,0,0,0} };
+            var input = new int[,] {
+            // 1 2 3 4 5 6 7 8
+             { 0,0,0,0,0,0,0,0}//1
+            ,{ 0,0,0,0,0,0,0,0}//2
+            ,{ 0,0,0,0,0,0,0,0}//3
+            ,{ 0,0,0,1,2,0,0,0}//4
+            ,{ 0,0,0,2,1,0,0,0}//5
+            ,{ 0,0,0,0,0,0,0,0}//6
+            ,{ 0,0,0,0,0,0,0,0}//7
+            ,{ 0,0,0,0,0,0,0,0}//8
+            };
             ban.SetBan(input);
-            Assert.AreEqual(input[2, 2], (int)ban[2, 2]._Type);
+        }
+        
+        [Test]
+        public void Test_setBan()
+        {
+            ban = new Ban_new(2);
+            var input = new int[,]
+            {
+                {1,2 }
+               ,{2,1 }
+            };
+            ban.SetBan(input);
+            Assert.AreEqual(1, ban[0, 0]);
+            Assert.AreEqual(2, ban[1, 0]);
+        }
+
+        [Test]
+        public void Test_getBanData()
+        {
+            var get = ban.GetBanData();
+            Assert.AreEqual(1, get[3, 3]);
         }
     }
 }
