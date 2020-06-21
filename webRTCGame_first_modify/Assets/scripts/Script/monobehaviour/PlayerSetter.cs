@@ -7,9 +7,11 @@ public class PlayerSetter : MonoBehaviour
     public enum PlType
     {
         Hand,
-        Auto
+        Auto,
+        Remote,
+        None
     }
-    [SerializeField] PlType _myPlType;
+    [SerializeField]public PlType _myPlType;
     [SerializeField] GameControllData.PlayerColor _myColor;
     public GameControllData.PlayerColor _MyColor { get { return _myColor; }set { _myColor = value; } }
     
@@ -26,19 +28,22 @@ public class PlayerSetter : MonoBehaviour
                 return new AutoOceloPlayer(_myColor);
             case PlType.Hand:
                 return new HandOceloPlayer(_myColor);
+            case PlType.Remote:
+                return new HandOceloPlayer(_myColor);
         }
         return null;
     }
 
 
-    public void Onclick_putKoma(OceloController octrl,Vector2Int pos)
+    public bool Onclick_putKoma(OceloController octrl,Vector2Int pos)
     {
-        if (!handPut) return;
+        if (!handPut) return false;
         bool putenable = octrl.SetKoma(pos, _myColor);
-        if (!putenable) return;
+        if (!putenable) return false;
         octrl.TurnAction();
         octrl.TurnAction();
         octrl.TurnAction();
+        return true;
     }
 
 }

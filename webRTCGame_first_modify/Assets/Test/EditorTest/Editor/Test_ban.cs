@@ -49,5 +49,20 @@ namespace Tests
             var get = ban.GetBanData();
             Assert.AreEqual(1, get[3, 3]);
         }
+
+        [Test]
+        public void Test_tojsonBan()
+        {
+            ban = new Ban_new(2);
+            var input = new int[,]
+            {
+                {1,2 }
+               ,{2,1 }
+            };
+            ban.SetBan(input);
+            var json = JsonConverter.ToJson_full(ban);
+            var output = JsonConverter.FromJson_full<Ban_new>(json);
+            Assert.AreEqual(ban[1, 1], output[1, 1]);
+        }
     }
 }

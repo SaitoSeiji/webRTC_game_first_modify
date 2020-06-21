@@ -36,9 +36,7 @@ public class GameControllData
     public GameControllData(PlayerColor _firstTurn)
     {
         _activePlayerColor = _firstTurn;
-        _playerData = new List<PlayerData>();
-        _playerData.Add(new PlayerData(1, PlayerColor.BLACK));
-        _playerData.Add(new PlayerData(2, PlayerColor.WHITE));
+        SetColor(PlayerColor.BLACK, PlayerColor.WHITE);
     }
 
     public void SwichActivePlayer()
@@ -46,6 +44,12 @@ public class GameControllData
         _activePlayerColor=GetOtherColor(_activePlayerColor);
     }
 
+    public void SetColor(PlayerColor pl1c,PlayerColor pl2c)
+    {
+        _playerData = new List<PlayerData>();
+        _playerData.Add(new PlayerData(1,pl1c));
+        _playerData.Add(new PlayerData(2,pl2c));
+    }
     #region static
     public static PlayerColor GetOtherColor(PlayerColor color)
     {
@@ -88,6 +92,7 @@ public class HandOceloPlayer:OceloPlayer
 
 public class AutoOceloPlayer : OceloPlayer
 {
+
     public AutoOceloPlayer(GameControllData.PlayerColor myColor) : base(myColor)
     {
 
@@ -95,12 +100,15 @@ public class AutoOceloPlayer : OceloPlayer
 
     public override void TurnAction(OceloController oc)
     {
-        var putlist=GameLogic_ocelo.GetPutEnable(oc._BanData,(int) _myColor);
-        var target = putlist[0];
-        oc.SetKoma(target, _myColor);
-        oc.TurnAction();
-        oc.TurnAction();
-        oc.TurnAction();
+        WaitAction.Instance.CoalWaitAction(() =>
+        {
+            var putlist = GameLogic_ocelo.GetPutEnable(oc._BanData, (int)_myColor);
+            var target = putlist[0];
+            oc.SetKoma(target, _myColor);
+            oc.TurnAction();
+            oc.TurnAction();
+            oc.TurnAction();
+        },1);
     }
 }
 #endregion
@@ -113,9 +121,9 @@ public class OceloController
         PlChenge
     }
     public GameState _gamestate { get; private set; }
-    public GameControllData _processData { get; private set; }
+    public GameControllData _processData { get; set; }
     public GameControllData.PlayerColor _NowPlType { get { return _processData._ActivePlayerColor; } }
-    Ban_new _ban { get; set; }
+    public Ban_new _ban { get; set; }
     public int[,] _BanData { get { return _ban.GetBanData(); } }
 
     public List<OceloPlayer> _oceloPlayer=new List<OceloPlayer>();
@@ -211,6 +219,12 @@ public class OceloController
         }
     }
 
+    public bool SetKoma(Ban_new ban)
+    {
+        _gamestate = GameState.Display;
+        _ban = ban;
+        return true;
+    }
 
     public string OutLogBan()
     {

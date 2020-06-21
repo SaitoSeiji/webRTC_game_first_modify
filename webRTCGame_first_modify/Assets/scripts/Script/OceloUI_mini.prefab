@@ -1,5 +1,105 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &384631449
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 384631451}
+  - component: {fileID: 384631450}
+  m_Layer: 5
+  m_Name: myPl
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &384631451
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 384631449}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 2637153755660093596}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &384631450
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 384631449}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d6456917e2a6f74f834e5a38021e0db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _myPlType: 0
+  _myColor: 0
+--- !u!1 &1125591925
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1125591927}
+  - component: {fileID: 1125591926}
+  m_Layer: 5
+  m_Name: enemyPl
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1125591927
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1125591925}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 2637153755660093596}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1125591926
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1125591925}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d6456917e2a6f74f834e5a38021e0db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _myPlType: 2
+  _myColor: 0
 --- !u!1 &260533805611162347
 GameObject:
   m_ObjectHideFlags: 0
@@ -3979,7 +4079,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -191.1, y: -47.5}
+  m_AnchoredPosition: {x: -191, y: -47.5}
   m_SizeDelta: {x: -382.12076, y: -94.90582}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2637153754575702439
@@ -4054,7 +4154,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -53.808, y: 1.1999}
+  m_AnchoredPosition: {x: -53.75, y: 1.1999}
   m_SizeDelta: {x: 107.616486, y: 212.7356}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2637153754826767225
@@ -4457,6 +4557,8 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_Children:
   - {fileID: 2637153754575702437}
+  - {fileID: 384631451}
+  - {fileID: 1125591927}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -4537,21 +4639,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a04ba7092fd64544ca979191ad46cd69, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _myoceloCtrl:
-    _gamestate: 1
-    _nowPlType: 1
-    myPl:
-      _myPlType: 0
-    enemyPl:
-      _myPlType: 0
+  _gameSetting: {fileID: 11400000, guid: bc61d196c78bcb7459a7dd4c566191eb, type: 2}
+  _myPlNum: 1
+  _myColor: 0
   _disp: {fileID: 2637153755004162133}
   _dataReciever: {fileID: 1259326847014687798}
+  _myPl: {fileID: 384631450}
+  _enemyPl: {fileID: 1125591926}
   whiteTurn: {fileID: 2637153754826767230}
   blackTurn: {fileID: 2637153755383843852}
   _userTypeDisplay: {fileID: 1381006357511781462}
   _winText: {fileID: 8639889793972550114}
-  _mypl:
-    _myPlType: 0
 --- !u!114 &1259326847014687798
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-
 public class Ban_new
 {
     [SerializeField] List<List<int>> ban;

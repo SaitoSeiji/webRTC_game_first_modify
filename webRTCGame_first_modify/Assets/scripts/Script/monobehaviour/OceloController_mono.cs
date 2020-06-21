@@ -6,7 +6,8 @@ using UnityEngine.UI;
 public class OceloController_mono : MonoBehaviour
 {
     public OceloController _myoceloCtrl { get; private set; }
-    [SerializeField] int _myPlNum;
+    [SerializeField] GameSetting _gameSetting;
+    [SerializeField] public int _myPlNum;
     [SerializeField, NonEditable] GameControllData.PlayerColor _myColor;
     [SerializeField,Space(10)] OceloBanDisplayer _disp;
     [SerializeField] OceloDataChannelReciever _dataReciever;
@@ -35,6 +36,11 @@ public class OceloController_mono : MonoBehaviour
         _myoceloCtrl._callback_endGame = EndGame;
         _disp.Init();
         _disp._callback_masuclick = Onclick_putKoma;
+
+        if(_gameSetting._gameStartType== GameSetting.GameStartType.Awake)
+        {
+            StartGame();
+        }
     }
     #region callback
     void GameStart()
@@ -42,7 +48,9 @@ public class OceloController_mono : MonoBehaviour
         _myColor = (_myoceloCtrl._processData._PlayerData[0]._PlNumber == _myPlNum) ? _myoceloCtrl._processData._PlayerData[0]._PlColor : _myoceloCtrl._processData._PlayerData[1]._PlColor;
         //プレイヤーの設定
         _myPl._MyColor = _myColor;
+        if (_gameSetting._pltype_1p != PlayerSetter.PlType.None) _myPl._myPlType = _gameSetting._pltype_1p;
         _enemyPl._MyColor = GameControllData.GetOtherColor(_myColor);
+        if (_gameSetting._pltype_2p != PlayerSetter.PlType.None) _enemyPl._myPlType = _gameSetting._pltype_2p;
         _myoceloCtrl._oceloPlayer.Add(_myPl.CreatePlayer());
         _myoceloCtrl._oceloPlayer.Add(_enemyPl.CreatePlayer());
         
@@ -52,8 +60,16 @@ public class OceloController_mono : MonoBehaviour
 
      void Onclick_putKoma(Vector2Int pos)
     {
-        _myPl.Onclick_putKoma(_myoceloCtrl, pos);
-        _enemyPl.Onclick_putKoma(_myoceloCtrl, pos);
+        bool successput_pl=_myPl.Onclick_putKoma(_myoceloCtrl, pos);
+        bool successput_enemy = _enemyPl.Onclick_putKoma(_myoceloCtrl, pos);
+
+        if (successput_pl && _dataReciever != null)
+        {
+            _dataReciever._ncmbSendData._myNCMBObject[NCMBSendData._objKey_banData] = JsonConverter.ToJson_full(_myoceloCtrl._ban);
+            _dataReciever._ncmbSendData.UpdateObject((obj)=> {
+                _dataReciever.SendOceloMessage(OceloDataChannelReciever.messageCode_playUser);
+            });
+        }
     }
 
     void SetTurnGuid()
@@ -79,7 +95,7 @@ public class OceloController_mono : MonoBehaviour
     #endregion
 
     [ContextMenu("startGame")]
-    void StartGame()
+    public void StartGame()
     {
         _myoceloCtrl.Init();
         _myoceloCtrl.TurnAction();
