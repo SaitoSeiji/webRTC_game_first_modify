@@ -34,7 +34,7 @@ public static class GameLogic_ocelo
     //選択可能かどうか取得
     public static bool IsPutEnable(int[,] banData, int komaType, Vector2Int pos)
     {
-        if (banData[pos.x,pos.y] != 0) return false;
+        if (!IsContainRange(banData,pos)||banData[pos.x,pos.y] != 0) return false;
         foreach (Vector2Int vec in EightVector.GetVec())
         {
             if (IsSand(banData, komaType, pos, vec))
@@ -59,7 +59,19 @@ public static class GameLogic_ocelo
         return result;
     }
 
-    public static bool CheckWin(int[,] banData, int komaType)
+    public static bool CheckAnyPutEnable(int[,] banData, int komaType)
+    {
+        return GetPutEnable(banData, komaType).Count > 0;
+    }
+
+    public static bool CheckEndGame(int[,] banData)
+    {
+        bool blackSkip = !CheckAnyPutEnable(banData, (int)GameControllData.PlayerColor.BLACK);
+        bool whiteSkip = !CheckAnyPutEnable(banData, (int)GameControllData.PlayerColor.WHITE);
+        return blackSkip && whiteSkip;
+    }
+
+    public static bool CheckWinner(int[,] banData, int komaType)
     {
         int self=0;
         int enemy=0;
@@ -93,19 +105,12 @@ public static class GameLogic_ocelo
             {
                 count++;
             }
-        });
+        },()=> count=0);
         return count > 0;
     }
 
-    static void SandAction(int[,] banData,int komaType, Vector2Int pos, Vector2Int vec,Action<int,int> checkAction=null)
+    static void SandAction(int[,] banData,int komaType, Vector2Int pos, Vector2Int vec,Action<int,int> checkAction=null,Action outRangeAction=null)
     {
-        //var origine = komaType;
-        //if (origine == null)
-        //{
-        //    Debug.LogError($"pos is invalid num:pos={pos}");
-        //    return;
-        //}
-
 
         int count = 1;
         var targetPos = pos + vec * count;
@@ -126,8 +131,15 @@ public static class GameLogic_ocelo
             {
                 count++;
                 targetPos = pos + vec * count;
-                if (!IsContainRange(banData, targetPos)) return;
-                check = banData[targetPos.x, targetPos.y];
+                if (!IsContainRange(banData, targetPos))
+                {
+                    outRangeAction?.Invoke();
+                    return;
+                }
+                else
+                {
+                    check = banData[targetPos.x, targetPos.y];
+                }
             }
         }
     }

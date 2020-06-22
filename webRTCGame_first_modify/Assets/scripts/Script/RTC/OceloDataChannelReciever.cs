@@ -2,19 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using NCMB;
 
 public class OceloDataChannelReciever : AbstractDataChannelReciever
 {
-    [SerializeField] OceloController_mono _octrl;
-    GameControllData _controllData { get { return _octrl._myoceloCtrl._processData; }
-                                     set  { _octrl._myoceloCtrl._processData = value; }
-        }
-    Ban_new _ban { get { return _octrl._myoceloCtrl._ban; }
-                  //set { _octrl._myoceloCtrl._ban = value; }
-    }
-    //GameControlOrder _order { get { return _octrl._myoceloCtrl._myorder; } }
-    public NCMBSendData _ncmbSendData  { get; private set; } =new NCMBSendData();
-
+    [SerializeField] OceloController_mono _octrl_mono;
+    RemoteOceloController _octrl { get { return (RemoteOceloController)_octrl_mono._myoceloCtrl; } }
+    
     #region messageCode
     public const string messageCode_startGame = "startGame";
     public const string messageCode_playUser = "play";
@@ -24,31 +18,15 @@ public class OceloDataChannelReciever : AbstractDataChannelReciever
     {
         //初回のみの行動
         //アクティブにしてゲーム開始
-        _octrl.gameObject.SetActive(true);
+        _octrl_mono.gameObject.SetActive(true);
         WaitAction.Instance.CoalWaitAction_frame(() =>
         {
             if (_myRTCType == MyRTCEnum.RTCTYPE.OFFER)
             {
-                _controllData.SetColor( GameControllData.PlayerColor.BLACK, GameControllData.PlayerColor.WHITE);//後でランダムにしたい
-                _octrl._myPlNum = 1;
+                _octrl_mono._myPlNum = 1;
+                _octrl.PrepareGame();
                 _octrl.StartGame();
-
-                var json_gameData = JsonConverter.ToJson(_controllData);
-                var json_banData = JsonConverter.ToJson_full(_ban);
-                _ncmbSendData.CreateObject();
-                _ncmbSendData._myNCMBObject[NCMBSendData._objKey_banData] = json_banData;
-                _ncmbSendData._myNCMBObject[NCMBSendData._objKey_gameData] = json_gameData;
-                _ncmbSendData.SaveObject((id)=> {
-                    SendRTCMessage(messageCode_startGame + $",{id}");
-                });
-                //var offerPlType = SetPl();
-                //var answerType = Koma_ocelo.GetAnatherType(offerPlType);
-                //var plmessage = new GameControlMessage_setpl(OceloPlayer.PlTYPE.INPUT, OceloPlayer.PlTYPE.RTC, answerType);
-                //SendOceloMessage(new OceloMessage(plmessage));
-
-                //StartGame();
-                //var startMessage = new GameControlMessage_startGame();
-                //SendOceloMessage(new OceloMessage(startMessage));
+                _octrl.CreateNCMB();
             }
         }, 1);
     }
@@ -60,51 +38,25 @@ public class OceloDataChannelReciever : AbstractDataChannelReciever
         switch (code)
         {
             case messageCode_startGame:
-                _ncmbSendData.CreateObject(input[1]);
-                _ncmbSendData.FetchObject((obj)=> {
-                    var json = obj[NCMBSendData._objKey_gameData].ToString();
-                    _controllData = JsonConverter.FromJson<GameControllData>(json);
-                });
-                _octrl._myPlNum = 2;
+                _octrl_mono._myPlNum = 2;
+                _octrl.CreateNCMB(input[1]);
+                _octrl.FetchGameState();
                 _octrl.StartGame();
                 break;
             case messageCode_playUser:
-                _ncmbSendData.FetchObject((obj) =>
-                {
-                    var json_game = obj[NCMBSendData._objKey_gameData].ToString();
-                    _controllData = JsonConverter.FromJson<GameControllData>(json_game);
-                    var json_ban = obj[NCMBSendData._objKey_banData].ToString();
-                    _octrl._myoceloCtrl.SetKoma(JsonConverter.FromJson_full<Ban_new>(json_ban));
-                    _octrl._myoceloCtrl.TurnAction();
-                    _octrl._myoceloCtrl.TurnAction();
-                    _octrl._myoceloCtrl.TurnAction();
-                });
+                _octrl.FetchGameState();
                 break;
         }
     }
 
 
-    public void SendOceloMessage(string message)
+    public void SendOceloMessage(string message,string[] additionalMessage=null)
     {
-        SendRTCMessage(message);
+        var result = message;
+        if (additionalMessage != null)
+        {
+            result=$"{result},{string.Join(",", additionalMessage)}";
+        }
+        SendRTCMessage(result);
     }
-
-    #region local
-    //Koma_ocelo.KomaType SetPl()
-    //{
-    //    var rand = Random.Range(0, 2);
-    //    var setType = (rand == 0) ? Koma_ocelo.KomaType.Black : Koma_ocelo.KomaType.White;
-    //    _order.MessageAction(new GameControlMessage_setpl( OceloPlayer.PlTYPE.INPUT , OceloPlayer.PlTYPE.RTC,setType));
-    //    return setType;
-    //}
-    //void SetPl(Koma_ocelo.KomaType type)
-    //{
-    //    _order.MessageAction(new GameControlMessage_setpl(OceloPlayer.PlTYPE.INPUT, OceloPlayer.PlTYPE.RTC, type));
-    //}
-
-    //void StartGame()
-    //{
-    //    _order.MessageAction(new GameControlMessage_startGame());
-    //}
-    #endregion
 }

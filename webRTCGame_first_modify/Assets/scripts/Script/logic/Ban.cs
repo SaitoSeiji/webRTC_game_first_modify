@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-public class Ban_new
+public class Ban
 {
     [SerializeField] List<List<int>> ban;
 
-    public Ban_new(int size)
+    public Ban(int size)
     {
         ban = new List<List<int>>();
         for (int i = 0; i < size; i++) ban.Add(new List<int>());
@@ -17,6 +17,7 @@ public class Ban_new
         });
     }
 
+    
     public int this[int x, int y]
     {
         get
@@ -36,7 +37,7 @@ public class Ban_new
         {
             for(int y = 0; y < ban.Count; y++)
             {
-                result[x, y] = this[x, y];
+                result[x,y] = this[x,y];
             }
         }
         return result;

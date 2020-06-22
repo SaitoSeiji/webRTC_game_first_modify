@@ -19,27 +19,36 @@ public class OceloController_mono : MonoBehaviour
     [SerializeField] GameObject blackTurn;
     [SerializeField] Text _userTypeDisplay;
     [SerializeField] Text _winText;
+    [SerializeField] Text _skipText;
 
     //[SerializeField]OceloPlayer _mypl;
 
     void Start()
     {
-        _myoceloCtrl = new OceloController();
+        if(_gameSetting._gameStartType== GameSetting.GameStartType.Remote)
+        {
+            _myoceloCtrl = new RemoteOceloController(_dataReciever);
+        }
+        else
+        {
+            _myoceloCtrl = new LocalOceloController();
+        }
 
-        _myoceloCtrl._callback_display = () =>
+        _myoceloCtrl._callback_syncBanData = () =>
         {
             _disp.SyncKoma(_myoceloCtrl._BanData);
         };
         _myoceloCtrl._callback_gameStart = GameStart;
-        _myoceloCtrl._callback_plChenge = SetTurnGuid;
-        _myoceloCtrl._callback_skipTurn = SetTurnGuid;
+        _myoceloCtrl._callback_syncGameProcess = SetTurnGuid;
+        _myoceloCtrl._callback_skipTurn = SkipGuid;
         _myoceloCtrl._callback_endGame = EndGame;
         _disp.Init();
         _disp._callback_masuclick = Onclick_putKoma;
 
         if(_gameSetting._gameStartType== GameSetting.GameStartType.Awake)
         {
-            StartGame();
+            _myoceloCtrl.PrepareGame();
+            _myoceloCtrl.StartGame();
         }
     }
     #region callback
@@ -56,20 +65,14 @@ public class OceloController_mono : MonoBehaviour
         
         var plTypeText = (_myColor ==  GameControllData.PlayerColor.BLACK) ? "黒" : "白";
         _userTypeDisplay.text = $"あなたは{plTypeText}です";
+        
+        SetTurnGuid();
     }
 
      void Onclick_putKoma(Vector2Int pos)
     {
-        bool successput_pl=_myPl.Onclick_putKoma(_myoceloCtrl, pos);
-        bool successput_enemy = _enemyPl.Onclick_putKoma(_myoceloCtrl, pos);
-
-        if (successput_pl && _dataReciever != null)
-        {
-            _dataReciever._ncmbSendData._myNCMBObject[NCMBSendData._objKey_banData] = JsonConverter.ToJson_full(_myoceloCtrl._ban);
-            _dataReciever._ncmbSendData.UpdateObject((obj)=> {
-                _dataReciever.SendOceloMessage(OceloDataChannelReciever.messageCode_playUser);
-            });
-        }
+         _myPl.Onclick_putKoma(_myoceloCtrl, pos);
+         _enemyPl.Onclick_putKoma(_myoceloCtrl, pos);
     }
 
     void SetTurnGuid()
@@ -86,6 +89,14 @@ public class OceloController_mono : MonoBehaviour
         }
     }
 
+    void SkipGuid()
+    {
+        _skipText.gameObject.SetActive(true);
+        var plTypeText = (_myoceloCtrl._NowPlType == GameControllData.PlayerColor.BLACK) ? "黒" : "白";
+        _skipText.text = $"{plTypeText}は置く場所がないのでスキップします";
+        WaitAction.Instance.CoalWaitAction(() => _skipText.gameObject.SetActive(false), 1);
+    }
+
     void EndGame(GameControllData.PlayerColor winType)
     {
         _winText.gameObject.SetActive(true);
@@ -93,13 +104,5 @@ public class OceloController_mono : MonoBehaviour
         _winText.text = $"{plTypeText}の勝利です";
     }
     #endregion
-
-    [ContextMenu("startGame")]
-    public void StartGame()
-    {
-        _myoceloCtrl.Init();
-        _myoceloCtrl.TurnAction();
-        _myoceloCtrl.TurnAction();
-        _myoceloCtrl.TurnAction();
-    }
+    
 }

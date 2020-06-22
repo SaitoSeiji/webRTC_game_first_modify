@@ -35,15 +35,10 @@ public class PlayerSetter : MonoBehaviour
     }
 
 
-    public bool Onclick_putKoma(OceloController octrl,Vector2Int pos)
+    public void Onclick_putKoma(OceloController octrl,Vector2Int pos)
     {
-        if (!handPut) return false;
-        bool putenable = octrl.SetKoma(pos, _myColor);
-        if (!putenable) return false;
-        octrl.TurnAction();
-        octrl.TurnAction();
-        octrl.TurnAction();
-        return true;
+        if (!handPut) return;
+        octrl.SetKoma(pos, _myColor);
     }
 
 }

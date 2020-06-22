@@ -8,11 +8,11 @@ namespace Tests
 {
     public class Test_gameLogic_ocello
     {
-        Ban_new ban;
+        Ban ban;
         [SetUp]
         public void SetUp()
         {
-            ban = new Ban_new(8);
+            ban = new Ban(8);
 
             var input = new int[,] {
             // 0 1 2 3 4 5 6 7
@@ -46,8 +46,26 @@ namespace Tests
         [TestCase(GameControllData.PlayerColor.BLACK, 4, 2, 0, 1, true)]
         public void Test_isSand(GameControllData.PlayerColor komaType, int x, int y, int vx, int vy, bool expect)
         {
-            var result = GameLogic_ocelo.IsSand(ban.GetBanData(),(int) komaType, new Vector2Int(x, y), new Vector2Int(vx, vy));
+            var result = GameLogic_ocelo.IsSand(ban.GetBanData(), (int)komaType, new Vector2Int(x, y), new Vector2Int(vx, vy));
             Assert.AreEqual(expect, result);
+        }
+
+        [Test]
+        public void Test_isSand_outban()
+        {
+            ban = new Ban(3);
+            var input = new int[,]
+            {
+                { 0,0,1},
+                { 2,1,0},
+                { 0,0,0}
+            };
+            ban.SetBan(input);
+            Vector2Int pos = new Vector2Int(1, 2);
+            var result1 = GameLogic_ocelo.IsSand(ban.GetBanData(),2,pos, new Vector2Int(0,-1));
+            Assert.AreEqual(true, result1);
+            var result2 = GameLogic_ocelo.IsSand(ban.GetBanData(),2,pos, new Vector2Int(-1,0));
+            Assert.AreEqual(false, result2);
         }
 
         [TestCase(GameControllData.PlayerColor.WHITE, 2, 3, true)]
@@ -71,6 +89,47 @@ namespace Tests
             Assert.AreNotEqual(before, after);
             ban.SetBan(result);
             Assert.AreEqual(after, ban.GetBanData()[ex,ey]);
+        }
+
+        [Test]
+        public void Test_skip()
+        {
+            ban = new Ban(3);
+            var input = new int[,]
+            {
+                { 1,1,1},
+                { 2,1,0},
+                { 1,1,1}
+            };
+            ban.SetBan(input);
+            var miss = GameLogic_ocelo.CheckAnyPutEnable(ban.GetBanData(), 1);
+            var succsess = GameLogic_ocelo.CheckAnyPutEnable(ban.GetBanData(), 2);
+            Assert.AreEqual(false, miss);
+            Assert.AreEqual(true, succsess);
+        }
+
+        [Test]
+        public void Test_endGame()
+        {
+            ban = new Ban(3);
+            var input = new int[,]
+            {
+                { 1,1,1},
+                { 2,1,2},
+                { 1,1,1}
+            };
+            ban.SetBan(input);
+            var end = GameLogic_ocelo.CheckEndGame(ban.GetBanData());
+            Assert.AreEqual(true, end);
+            input = new int[,]
+            {
+                { 1,1,1},
+                { 2,1,0},
+                { 1,1,1}
+            };
+            ban.SetBan(input);
+            var notend = GameLogic_ocelo.CheckEndGame(ban.GetBanData());
+            Assert.AreEqual(false, notend);
         }
     }
 }

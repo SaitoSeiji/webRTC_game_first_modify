@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using NCMB;
 
 [Serializable]
 public class GameControllData
@@ -105,33 +106,23 @@ public class AutoOceloPlayer : OceloPlayer
             var putlist = GameLogic_ocelo.GetPutEnable(oc._BanData, (int)_myColor);
             var target = putlist[0];
             oc.SetKoma(target, _myColor);
-            oc.TurnAction();
-            oc.TurnAction();
-            oc.TurnAction();
         },1);
     }
 }
 #endregion
-public class OceloController
+public abstract class OceloController
 {
-    public enum GameState
-    {
-        WaitInput,
-        Display,
-        PlChenge
-    }
-    public GameState _gamestate { get; private set; }
-    public GameControllData _processData { get; set; }
+    public GameControllData _processData { get;protected set; }
     public GameControllData.PlayerColor _NowPlType { get { return _processData._ActivePlayerColor; } }
-    public Ban_new _ban { get; set; }
+    public Ban _ban { get;protected set; }
     public int[,] _BanData { get { return _ban.GetBanData(); } }
 
     public List<OceloPlayer> _oceloPlayer=new List<OceloPlayer>();
 
     #region callback
     public Action _callback_gameStart;
-    public Action _callback_display;
-    public Action _callback_plChenge;
+    public Action _callback_syncBanData;
+    public Action _callback_syncGameProcess;
     public Action _callback_waitInput;
     public Action _callback_skipTurn;
     public Action<GameControllData.PlayerColor> _callback_endGame;
@@ -139,57 +130,38 @@ public class OceloController
 
     public OceloController()
     {
-        _ban = new Ban_new(8);
+        _ban = new Ban(8);
         _processData = new GameControllData(GameControllData.PlayerColor.BLACK);
-        _gamestate = GameState.Display;
+        //_gamestate = GameState.Display;
     }
-    
+
     #region turnAction
-    public void TurnAction()
+    
+    protected void TurnAction_waitInput()
     {
 
-        switch (_gamestate)
-        {
-            case GameState.WaitInput:
-                _callback_waitInput?.Invoke();
-                _oceloPlayer.ForEach(x => {
-                    if(x._myColor == _NowPlType)
-                    {
-                        x.TurnAction(this);
-                    }
-                });
-                break;
-            case GameState.Display:
-                Display();
-                _gamestate = GameState.PlChenge;
-                _callback_display?.Invoke();
 
-                break;
-            case GameState.PlChenge:
-                PlChenge();
-                if (PutEnable())
-                {
-                    _gamestate = GameState.WaitInput;
-                    _callback_plChenge?.Invoke();
-                }
-                else
-                {
-                    PlChenge();
-                    if (PutEnable())
-                    {
-                        _gamestate = GameState.WaitInput;
-                        _callback_skipTurn?.Invoke();
-                        //_callback_plChenge?.Invoke();
-                    }
-                    else
-                    {
-                        var win = GameLogic_ocelo.CheckWin(_ban.GetBanData(), (int)GameControllData.PlayerColor.BLACK);
-                        _callback_endGame?.Invoke((win)? GameControllData.PlayerColor.BLACK: GameControllData.PlayerColor.WHITE);
-                    }
-                }
-                break;
-        }
+        _callback_waitInput?.Invoke();
+        _oceloPlayer.ForEach(x => {
+            if (x._myColor == _NowPlType)
+            {
+                x.TurnAction(this);
+            }
+        });
     }
+    protected void TurnAction_display()
+    {
+        Display();
+        _callback_syncBanData?.Invoke();
+    }
+    protected void TurnAction_swichPl()
+    {
+        PlChenge();
+        _callback_syncGameProcess?.Invoke();
+    }
+
+    protected abstract void TurnAction();
+    protected abstract void SetKomaAction();
 
     void Display()
     {
@@ -203,27 +175,24 @@ public class OceloController
     #endregion
     public bool SetKoma(Vector2Int putPos,GameControllData.PlayerColor putColor)
     {
-        if (putColor!=_NowPlType)return false;
+        if (putColor != _NowPlType)
+        {
+            return false;
+        }
         if (GameLogic_ocelo.IsPutEnable(_ban.GetBanData(), (int)_NowPlType, putPos))
         {
             _ban[putPos.x, putPos.y] = (int)_NowPlType;
             var newBanData=GameLogic_ocelo.Reverse(_ban.GetBanData(), putPos);
             _ban.SetBan(newBanData);
-            _gamestate = GameState.Display;
+            //_gamestate = GameState.Display;
+            SetKomaAction();
             return true;
         }
         else
         {
-            Debug.LogWarning($"putpos is not put enable:{putPos}");
+            //Debug.LogWarning($"putpos is not put enable:{putPos}");
             return false;
         }
-    }
-
-    public bool SetKoma(Ban_new ban)
-    {
-        _gamestate = GameState.Display;
-        _ban = ban;
-        return true;
     }
 
     public string OutLogBan()
@@ -243,9 +212,14 @@ public class OceloController
         return result;
     }
 
-    public void Init()
-    {
 
+    public void PrepareGame()
+    {
+        _processData.SetColor(GameControllData.PlayerColor.BLACK, GameControllData.PlayerColor.WHITE);//後でランダムにする
+    }
+
+    public void StartGame()
+    {
         var input = new int[,] {
             // 1 2 3 4 5 6 7 8
              { 0,0,0,0,0,0,0,0}//1
@@ -259,11 +233,160 @@ public class OceloController
         };
         _ban.SetBan(input);
         _callback_gameStart?.Invoke();
+        TurnAction_display();
+    }
+
+    public void EndGame()
+    {
+        var check = GameControllData.PlayerColor.BLACK;
+        var winBlack=GameLogic_ocelo.CheckWinner(_ban.GetBanData(), (int)check);
+        var winner = (winBlack) ?check:GameControllData.PlayerColor.WHITE;
+        _callback_endGame?.Invoke(winner);
+    }
+
+    #region 勝敗判定
+    protected bool CheckPutEnable()
+    {
+        return GameLogic_ocelo.CheckAnyPutEnable(_ban.GetBanData(), (int)_NowPlType);
+    }
+
+    protected bool CheckEndGame()
+    {
+        return GameLogic_ocelo.CheckEndGame(_ban.GetBanData());
     }
     
-    bool PutEnable()
+    #endregion
+}
+
+public class LocalOceloController : OceloController
+{
+    protected override void TurnAction()
     {
-        var list= GameLogic_ocelo.GetPutEnable(_ban.GetBanData(), (int)_NowPlType);
-        return list.Count > 0;
+        TurnAction_display();
+        TurnAction_swichPl();
+        if (CheckEndGame())
+        {
+            EndGame();
+        }else if (!CheckPutEnable())
+        {
+            _callback_skipTurn?.Invoke();
+            WaitAction.Instance.CoalWaitAction(()=> TurnAction(),1);
+        }
+        else
+        {
+            TurnAction_waitInput();
+        }
+        //勝敗判定
     }
+    
+    protected override void SetKomaAction()
+    {
+        TurnAction();
+    }
+}
+
+public class RemoteOceloController : OceloController
+{
+    private OceloDataChannelReciever _dataReciever { get; set; }
+    private NCMBSendData _ncmbSendData;//本体をこっちに持ってきたい
+
+    public RemoteOceloController(OceloDataChannelReciever reciever) : base()
+    {
+        _dataReciever = reciever;
+    }
+    protected override void TurnAction()
+    {
+        TurnAction_display();
+        TurnAction_swichPl();
+        //勝敗判定
+        if (CheckEndGame())
+        {
+            EndGame();
+        }else if (!CheckPutEnable())
+        {
+            _callback_skipTurn?.Invoke();
+            TurnAction_swichPl();
+            UpdateNCMBObjectData(_ncmbSendData._myNCMBObject);
+            _ncmbSendData.UpdateObject((obj) => {
+                _dataReciever.SendOceloMessage(OceloDataChannelReciever.messageCode_playUser);
+            });
+        }
+        else
+        {
+            TurnAction_waitInput();
+        }
+    }
+
+    protected override void SetKomaAction()
+    {
+        TurnAction();
+        //情報送信
+        UpdateNCMBObjectData(_ncmbSendData._myNCMBObject);
+        _ncmbSendData.UpdateObject((obj) => {
+            _dataReciever.SendOceloMessage(OceloDataChannelReciever.messageCode_playUser);
+        });
+    }
+
+    //情報受信
+    public void FetchGameState()
+    {
+        _ncmbSendData.FetchObject((obj)=> {
+            FetchNCMBObjectData(_ncmbSendData._myNCMBObject);
+            _callback_syncBanData?.Invoke();
+            _callback_syncGameProcess?.Invoke();
+            //勝敗判定
+            //勝敗判定
+            if (CheckEndGame())
+            {
+                EndGame();
+                _ncmbSendData.DeleteObject();
+            }
+            else if (!CheckPutEnable())
+            {
+                _callback_skipTurn?.Invoke();
+                TurnAction_swichPl();
+                UpdateNCMBObjectData(_ncmbSendData._myNCMBObject);
+                _ncmbSendData.UpdateObject((obj2) => {
+                    _dataReciever.SendOceloMessage(OceloDataChannelReciever.messageCode_playUser);
+                });
+            }
+            else
+            {
+                TurnAction_waitInput();
+            }
+        });
+    }
+    #region ncmb
+    public void CreateNCMB()
+    {
+        _ncmbSendData = new NCMBSendData();
+        _ncmbSendData.CreateObject();
+        UpdateNCMBObjectData(_ncmbSendData._myNCMBObject);
+        _ncmbSendData.SaveObject((id)=> {
+            _dataReciever.SendOceloMessage(OceloDataChannelReciever.messageCode_startGame, new string[] { id });
+        });
+    }
+
+    public void CreateNCMB(string id)
+    {
+        _ncmbSendData = new NCMBSendData();
+        _ncmbSendData.CreateObject(id);
+    }
+
+    void UpdateNCMBObjectData(NCMBObject obj)
+    {
+        obj[NCMBSendData._objKey_gameData] = JsonConverter.ToJson(_processData);
+        obj[NCMBSendData._objKey_banData] = JsonConverter.ToJson_full(_ban);
+    }
+
+    void FetchNCMBObjectData(NCMBObject obj)
+    {
+        var json_game = obj[NCMBSendData._objKey_gameData].ToString();
+        var controllData = JsonConverter.FromJson<GameControllData>(json_game);
+        var json_ban = obj[NCMBSendData._objKey_banData].ToString();
+        var banData = JsonConverter.FromJson_full<Ban>(json_ban);
+        _processData = controllData;
+        _ban = banData;
+    }
+    #endregion
 }
