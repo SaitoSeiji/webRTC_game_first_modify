@@ -27,6 +27,11 @@ public class OceloDataChannelReciever : AbstractDataChannelReciever
                 _octrl.PrepareGame();
                 _octrl.StartGame();
                 _octrl.CreateNCMB();
+                _octrl.StartTurn();
+            }
+            else
+            {
+                _octrl_mono._myPlNum = 2;
             }
         }, 1);
     }
@@ -38,10 +43,8 @@ public class OceloDataChannelReciever : AbstractDataChannelReciever
         switch (code)
         {
             case messageCode_startGame:
-                _octrl_mono._myPlNum = 2;
                 _octrl.CreateNCMB(input[1]);
                 _octrl.FetchGameState();
-                _octrl.StartGame();
                 break;
             case messageCode_playUser:
                 _octrl.FetchGameState();

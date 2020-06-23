@@ -38,22 +38,26 @@ public class OceloController_mono : MonoBehaviour
         {
             _disp.SyncKoma(_myoceloCtrl._BanData);
         };
-        _myoceloCtrl._callback_gameStart = GameStart;
-        _myoceloCtrl._callback_syncGameProcess = SetTurnGuid;
-        _myoceloCtrl._callback_skipTurn = SkipGuid;
-        _myoceloCtrl._callback_endGame = EndGame;
+        _myoceloCtrl._callback_gameStart += PrepareGame;
+        _myoceloCtrl._callback_syncPlayer += SetTurnGuid;
+        _myoceloCtrl._callback_skipTurn += SkipGuid;
+        _myoceloCtrl._callback_endGame += EndGame;
         _disp.Init();
-        _disp._callback_masuclick = Onclick_putKoma;
+        _disp._callback_masuclick += Onclick_putKoma;
 
         if(_gameSetting._gameStartType== GameSetting.GameStartType.Awake)
         {
             _myoceloCtrl.PrepareGame();
             _myoceloCtrl.StartGame();
+            _myoceloCtrl.StartTurn();
         }
     }
     #region callback
-    void GameStart()
+    bool inited = false;
+    void PrepareGame()
     {
+        if (inited) return;
+        inited = true;
         _myColor = (_myoceloCtrl._processData._PlayerData[0]._PlNumber == _myPlNum) ? _myoceloCtrl._processData._PlayerData[0]._PlColor : _myoceloCtrl._processData._PlayerData[1]._PlColor;
         //プレイヤーの設定
         _myPl._MyColor = _myColor;

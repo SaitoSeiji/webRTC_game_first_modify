@@ -28,18 +28,36 @@ public class GameControllData
         BLACK=1,
         WHITE=2
     }
+
+    public enum GameState
+    {
+        NONE=0,
+        START=1,
+        TURN=2,
+        SKIP=3,
+        END=4
+    }
+    #region field
     [SerializeField] PlayerColor _activePlayerColor;
     public PlayerColor _ActivePlayerColor { get { return _activePlayerColor; } }
 
     [SerializeField] List<PlayerData> _playerData;
     public IReadOnlyList<PlayerData> _PlayerData { get { return _playerData; } }
 
+    [SerializeField] int _gameState;
+    public GameState _GameState { get { return (GameState)Enum.ToObject(typeof(GameState), _gameState); ; }
+                                  set { _gameState = (int)value; }
+    }
+    #endregion
+
     public GameControllData(PlayerColor _firstTurn)
     {
         _activePlayerColor = _firstTurn;
         SetColor(PlayerColor.BLACK, PlayerColor.WHITE);
+        _GameState = GameState.NONE;
     }
 
+    #region public関数
     public void SwichActivePlayer()
     {
         _activePlayerColor=GetOtherColor(_activePlayerColor);
@@ -51,6 +69,7 @@ public class GameControllData
         _playerData.Add(new PlayerData(1,pl1c));
         _playerData.Add(new PlayerData(2,pl2c));
     }
+    #endregion
     #region static
     public static PlayerColor GetOtherColor(PlayerColor color)
     {
@@ -122,7 +141,7 @@ public abstract class OceloController
     #region callback
     public Action _callback_gameStart;
     public Action _callback_syncBanData;
-    public Action _callback_syncGameProcess;
+    public Action _callback_syncPlayer;
     public Action _callback_waitInput;
     public Action _callback_skipTurn;
     public Action<GameControllData.PlayerColor> _callback_endGame;
@@ -133,14 +152,50 @@ public abstract class OceloController
         _ban = new Ban(8);
         _processData = new GameControllData(GameControllData.PlayerColor.BLACK);
         //_gamestate = GameState.Display;
+        InitAction();
     }
 
     #region turnAction
-    
-    protected void TurnAction_waitInput()
+    protected void SyncGameProcess()
     {
+        //ゲーム進行状況の更新
+        switch (_processData._GameState)
+        {
+            case GameControllData.GameState.START:
+                _callback_gameStart?.Invoke();
+                _callback_syncBanData?.Invoke();
+                _callback_syncPlayer?.Invoke();//現在のプレイヤーの更新
+                break;
+            case GameControllData.GameState.TURN:
+                _callback_syncBanData?.Invoke();
+                _callback_syncPlayer?.Invoke();//現在のプレイヤーの更新
+                TurnAction_waitInput();
+                break;
+            case GameControllData.GameState.SKIP:
+                _callback_skipTurn();
+                break;
+            case GameControllData.GameState.END:
+                EndGame();
+                break;
+        }
+    }
 
+    protected void JudgeAction()
+    {
+        if (CheckEndGame()) _processData._GameState = GameControllData.GameState.END;
+        else if (!CheckPutEnable()) _processData._GameState = GameControllData.GameState.SKIP;
+        else _processData._GameState = GameControllData.GameState.TURN;
+    }
 
+    //protected void TurnAction_judge(Action waitInput,Action skipTurn,Action endGame)
+    //{
+    //    if (CheckEndGame()) endGame.Invoke();
+    //    else if (!CheckPutEnable()) skipTurn.Invoke();
+    //    else waitInput.Invoke();
+    //}
+
+    void TurnAction_waitInput()
+    {
         _callback_waitInput?.Invoke();
         _oceloPlayer.ForEach(x => {
             if (x._myColor == _NowPlType)
@@ -149,26 +204,27 @@ public abstract class OceloController
             }
         });
     }
-    protected void TurnAction_display()
-    {
-        Display();
-        _callback_syncBanData?.Invoke();
-    }
-    protected void TurnAction_swichPl()
-    {
-        PlChenge();
-        _callback_syncGameProcess?.Invoke();
-    }
+    //protected void TurnAction_display()
+    //{
+    //    Display();
+    //    _callback_syncBanData?.Invoke();
+    //}
+    //protected void TurnAction_swichPl()
+    //{
+    //    PlChenge();
+    //    _callback_syncPlayer?.Invoke();
+    //}
 
-    protected abstract void TurnAction();
+    //protected abstract void TurnAction();
     protected abstract void SetKomaAction();
+    protected abstract void InitAction();
 
     void Display()
     {
         //Debug.Log( OutLogBan());
     }
 
-    void PlChenge()
+    protected void PlChenge()
     {
         _processData.SwichActivePlayer();
     }
@@ -184,13 +240,11 @@ public abstract class OceloController
             _ban[putPos.x, putPos.y] = (int)_NowPlType;
             var newBanData=GameLogic_ocelo.Reverse(_ban.GetBanData(), putPos);
             _ban.SetBan(newBanData);
-            //_gamestate = GameState.Display;
             SetKomaAction();
             return true;
         }
         else
         {
-            //Debug.LogWarning($"putpos is not put enable:{putPos}");
             return false;
         }
     }
@@ -216,10 +270,6 @@ public abstract class OceloController
     public void PrepareGame()
     {
         _processData.SetColor(GameControllData.PlayerColor.BLACK, GameControllData.PlayerColor.WHITE);//後でランダムにする
-    }
-
-    public void StartGame()
-    {
         var input = new int[,] {
             // 1 2 3 4 5 6 7 8
              { 0,0,0,0,0,0,0,0}//1
@@ -232,11 +282,39 @@ public abstract class OceloController
             ,{ 0,0,0,0,0,0,0,0}//8
         };
         _ban.SetBan(input);
-        _callback_gameStart?.Invoke();
-        TurnAction_display();
     }
 
-    public void EndGame()
+    //void SetUpBan()
+    //{
+    //    var input = new int[,] {
+    //        // 1 2 3 4 5 6 7 8
+    //         { 0,0,0,0,0,0,0,0}//1
+    //        ,{ 0,0,0,0,0,0,0,0}//2
+    //        ,{ 0,0,0,0,0,0,0,0}//3
+    //        ,{ 0,0,0,1,2,0,0,0}//4
+    //        ,{ 0,0,0,2,1,0,0,0}//5
+    //        ,{ 0,0,0,0,0,0,0,0}//6
+    //        ,{ 0,0,0,0,0,0,0,0}//7
+    //        ,{ 0,0,0,0,0,0,0,0}//8
+    //    };
+    //    _ban.SetBan(input);
+
+    //    //TurnAction_display();
+    //}
+
+    public void StartGame()
+    {
+        _processData._GameState = GameControllData.GameState.START;
+        SyncGameProcess();
+    }
+
+    public void StartTurn()
+    {
+        _processData._GameState = GameControllData.GameState.TURN;
+        SyncGameProcess();
+    }
+
+    void EndGame()
     {
         var check = GameControllData.PlayerColor.BLACK;
         var winBlack=GameLogic_ocelo.CheckWinner(_ban.GetBanData(), (int)check);
@@ -260,28 +338,32 @@ public abstract class OceloController
 
 public class LocalOceloController : OceloController
 {
-    protected override void TurnAction()
+    //protected override void TurnAction()
+    //{
+    //    TurnAction_display();
+    //    TurnAction_swichPl();
+    //    TurnAction_judge(
+    //        () => TurnAction_waitInput(),
+    //        () =>
+    //        {
+    //            _callback_skipTurn?.Invoke();
+    //            WaitAction.Instance.CoalWaitAction(() => TurnAction(), 1);
+    //        },
+    //        () => EndGame()
+    //    );
+    //}
+
+    protected override void InitAction()
     {
-        TurnAction_display();
-        TurnAction_swichPl();
-        if (CheckEndGame())
-        {
-            EndGame();
-        }else if (!CheckPutEnable())
-        {
-            _callback_skipTurn?.Invoke();
-            WaitAction.Instance.CoalWaitAction(()=> TurnAction(),1);
-        }
-        else
-        {
-            TurnAction_waitInput();
-        }
-        //勝敗判定
+        _callback_skipTurn+=()=> WaitAction.Instance.CoalWaitAction(() => SetKomaAction(), 1);
     }
-    
+
     protected override void SetKomaAction()
     {
-        TurnAction();
+        //TurnAction();
+        PlChenge();
+        JudgeAction();
+        SyncGameProcess();
     }
 }
 
@@ -294,32 +376,41 @@ public class RemoteOceloController : OceloController
     {
         _dataReciever = reciever;
     }
-    protected override void TurnAction()
+    //ゲームの進行処理
+    //protected override void TurnAction()
+    //{
+    //    TurnAction_display();
+    //    TurnAction_swichPl();
+    //    //勝敗判定
+    //    TurnAction_judge(
+    //        () => TurnAction_waitInput(),
+    //        () =>
+    //        {
+    //            _callback_skipTurn?.Invoke();
+    //        },
+    //        () => EndGame());
+    //}
+
+    protected override void InitAction()
     {
-        TurnAction_display();
-        TurnAction_swichPl();
-        //勝敗判定
-        if (CheckEndGame())
-        {
-            EndGame();
-        }else if (!CheckPutEnable())
-        {
-            _callback_skipTurn?.Invoke();
-            TurnAction_swichPl();
+        _callback_skipTurn += () =>{
+            PlChenge();
+            JudgeAction();
+            SyncGameProcess();
             UpdateNCMBObjectData(_ncmbSendData._myNCMBObject);
             _ncmbSendData.UpdateObject((obj) => {
                 _dataReciever.SendOceloMessage(OceloDataChannelReciever.messageCode_playUser);
             });
-        }
-        else
-        {
-            TurnAction_waitInput();
-        }
+        };
     }
 
+    //コマを置くことに成功したときに呼ばれる
     protected override void SetKomaAction()
     {
-        TurnAction();
+        //TurnAction();
+        PlChenge();
+        JudgeAction();
+        SyncGameProcess();
         //情報送信
         UpdateNCMBObjectData(_ncmbSendData._myNCMBObject);
         _ncmbSendData.UpdateObject((obj) => {
@@ -330,32 +421,33 @@ public class RemoteOceloController : OceloController
     //情報受信
     public void FetchGameState()
     {
-        _ncmbSendData.FetchObject((obj)=> {
-            FetchNCMBObjectData(_ncmbSendData._myNCMBObject);
-            _callback_syncBanData?.Invoke();
-            _callback_syncGameProcess?.Invoke();
-            //勝敗判定
-            //勝敗判定
-            if (CheckEndGame())
-            {
-                EndGame();
-                _ncmbSendData.DeleteObject();
-            }
-            else if (!CheckPutEnable())
-            {
-                _callback_skipTurn?.Invoke();
-                TurnAction_swichPl();
-                UpdateNCMBObjectData(_ncmbSendData._myNCMBObject);
-                _ncmbSendData.UpdateObject((obj2) => {
-                    _dataReciever.SendOceloMessage(OceloDataChannelReciever.messageCode_playUser);
-                });
-            }
-            else
-            {
-                TurnAction_waitInput();
-            }
+        _ncmbSendData.FetchObject((obj) =>
+        {
+            SyncGameProcess();
+            if(_processData._GameState == GameControllData.GameState.END) _ncmbSendData.DeleteObject();
         });
+        //_ncmbSendData.FetchObject((obj)=> {
+        //    FetchNCMBObjectData(_ncmbSendData._myNCMBObject);
+        //    _callback_syncBanData?.Invoke();
+        //    _callback_syncPlayer?.Invoke();
+        //    //勝敗判定
+        //    //TurnAction_judge(
+        //    //    () => TurnAction_waitInput(),
+        //    //    () =>{
+        //    //        _callback_skipTurn?.Invoke();
+        //    //        TurnAction_swichPl();
+        //    //        UpdateNCMBObjectData(_ncmbSendData._myNCMBObject);
+        //    //        _ncmbSendData.UpdateObject((obj2) =>
+        //    //        {
+        //    //            _dataReciever.SendOceloMessage(OceloDataChannelReciever.messageCode_playUser);
+        //    //        });}, 
+        //    //    () =>{
+        //    //        EndGame();
+        //    //        _ncmbSendData.DeleteObject();}
+        //    //    );
+        //});
     }
+    
     #region ncmb
     public void CreateNCMB()
     {
