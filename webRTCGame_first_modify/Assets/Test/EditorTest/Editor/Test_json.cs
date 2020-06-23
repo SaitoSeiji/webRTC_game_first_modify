@@ -26,16 +26,16 @@ namespace Tests
 
             Assert.AreEqual(origine.a, data.a);
         }
-        [Test]
-        public void Test_sendOceloMessage()
-        {
-            var remoteMessage = new GameControlMessage_putKoma(Koma_ocelo.KomaType.Black, new Vector2Int(0, 0));
-            //var json = JsonConverter.ToJson_full(remoteMessage);
-            var json = JsonConverter.ToJson(new OceloMessage(remoteMessage));
-            var data = JsonConverter.FromJson<OceloMessage>(json);
+        //[Test]
+        //public void Test_sendOceloMessage()
+        //{
+        //    var remoteMessage = new GameControlMessage_putKoma(Koma_ocelo.KomaType.Black, new Vector2Int(0, 0));
+        //    //var json = JsonConverter.ToJson_full(remoteMessage);
+        //    var json = JsonConverter.ToJson(new OceloMessage(remoteMessage));
+        //    var data = JsonConverter.FromJson<OceloMessage>(json);
 
-            Assert.AreEqual(remoteMessage.type, data.GetMessageType());
-        }
+        //    Assert.AreEqual(remoteMessage.type, data.GetMessageType());
+        //}
 
     }
 }

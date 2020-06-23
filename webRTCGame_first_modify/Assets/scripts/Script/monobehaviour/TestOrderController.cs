@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class TestOrderController : MonoBehaviour
 {
-    [SerializeField] OceloController_mono _octrlMono;
-    GameControlOrder _order { get { return _octrlMono._myoceloCtrl._myorder; } }
+    //[SerializeField] OceloController_mono _octrlMono;
+    //GameControlOrder _order { get { return _octrlMono._myoceloCtrl._myorder; } }
     //[ContextMenu("setpl")]
     //void SetPl()
     //{

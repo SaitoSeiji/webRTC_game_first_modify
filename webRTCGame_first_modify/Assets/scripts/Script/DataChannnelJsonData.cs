@@ -29,25 +29,25 @@ public class DataChannnelJsonData
     }
 }
 
-[System.Serializable]
-public class OceloMessage : DataChannnelJsonData
-{
-    public OceloMessage(GameControlMessage data)
-    {
-        this["type"]= data.type.ToString();
-        this["classJson"]= JsonConverter.ToJson_full(data);
-        //_DataSet["type"] = data.type.ToString();
-        //_DataSet["classJson"] = JsonConverter.ToJson_full(data);
-    }
+//[System.Serializable]
+//public class OceloMessage : DataChannnelJsonData
+//{
+//    public OceloMessage(GameControlMessage data)
+//    {
+//        this["type"]= data.type.ToString();
+//        this["classJson"]= JsonConverter.ToJson_full(data);
+//        //_DataSet["type"] = data.type.ToString();
+//        //_DataSet["classJson"] = JsonConverter.ToJson_full(data);
+//    }
 
-    public GameControlMessage.MessageType GetMessageType()
-    {
-        Enum.TryParse(this["type"], out GameControlMessage.MessageType result);
-        return result;
-    }
+//    public GameControlMessage.MessageType GetMessageType()
+//    {
+//        Enum.TryParse(this["type"], out GameControlMessage.MessageType result);
+//        return result;
+//    }
 
-    public string GetJson()
-    {
-        return this["classJson"];
-    }
-}
+//    public string GetJson()
+//    {
+//        return this["classJson"];
+//    }
+//}

@@ -3,100 +3,65 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-#region koma
-public class Koma
+public class Ban
 {
+    [SerializeField] List<List<int>> ban;
 
-}
-
-[System.Serializable]
-public class Koma_ocelo:Koma
-{
-    public enum KomaType
+    public Ban(int size)
     {
-        Black,
-        White
-    }
-    public KomaType _type { get; private set; }
-
-    public Koma_ocelo(KomaType type)
-    {
-        _type = type;
-    }
-
-    public void Reverse()
-    {
-        _type = (_type == KomaType.Black) ? KomaType.White : KomaType.Black;
-    }
-
-    public void SetType(KomaType type)
-    {
-        _type = type;
-    }
-
-    public static KomaType GetAnatherType(KomaType type)
-    {
-        return (type == KomaType.Black) ? KomaType.White : KomaType.Black;
-    }
-}
-#endregion
-[System.Serializable]
-public class Masu<K>
-    where K:Koma
-{
-    public K _myKoma { get; private set; }
-    
-    public void SetKoma(K koma)
-    {
-        _myKoma = koma;
-    }
-}
-
-[System.Serializable]
-public class Ban<K>
-    where K:Koma
-{
-    Masu<K>[][] _ban;//(x,y)
-
-    public Ban(Vector2Int size)
-    {
-        _ban = new Masu<K>[size.x][];
-        for(int i = 0; i < _ban.Length; i++)
+        ban = new List<List<int>>();
+        for (int i = 0; i < size; i++) ban.Add(new List<int>());
+        ban.ForEach(x =>
         {
-            _ban[i] = new Masu<K>[size.y];
-            for(int j = 0; j < _ban[i].Length; j++)
+            for (int i = 0; i < size; i++) x.Add(0);
+        });
+    }
+
+    
+    public int this[int x, int y]
+    {
+        get
+        {
+            return ban[x][y];
+        }
+        set
+        {
+            ban[x][y] = value;
+        }
+    }
+
+    public int[,] GetBanData()
+    {
+        int[,] result = new int[ban.Count, ban.Count];
+        for(int x = 0; x < ban.Count; x++)
+        {
+            for(int y = 0; y < ban.Count; y++)
             {
-                _ban[i][j] = new Masu<K>();
+                result[x,y] = this[x,y];
             }
         }
+        return result;
     }
 
-    public void SetMasu(K koma,Vector2Int pos)
+    public void SetBan(int[,] input)
     {
         try
         {
-            _ban[pos.x][pos.y].SetKoma(koma);
-        }
-        catch (IndexOutOfRangeException e)
-        {
-            Debug.LogWarning($"not expected setMasu:pos={pos}");
-        }
-    }
-
-    Masu<K> GetMasu(Vector2Int pos)
-    {
-        return _ban[pos.x][pos.y];
-    }
-
-    public K GetKoma(Vector2Int pos)
-    {
-        try
-        {
-            return _ban[pos.x][pos.y]._myKoma;
+            for (int x = 0; x < ban.Count; x++)
+            {
+                for(int y = 0; y < ban[x].Count; y++)
+                {
+                    this[x, y] =input[x,y];
+                }
+            }
         }
         catch(IndexOutOfRangeException e)
         {
-            return null;
+            Debug.LogError($"サイズが違います:{e}");
+        }
+        catch(Exception e)
+        {
+            Debug.LogError($"その他の例外:{e}");
         }
     }
 }
