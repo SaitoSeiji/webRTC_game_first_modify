@@ -44,13 +44,15 @@ public class GameControllData
     [SerializeField] List<PlayerData> _playerData;
     public IReadOnlyList<PlayerData> _PlayerData { get { return _playerData; } }
 
-    [SerializeField] int _gameState;
-    public GameState _GameState { get { return (GameState)Enum.ToObject(typeof(GameState), _gameState); ; }
-                                  set { _gameState = (int)value; }
-    }
-    #endregion
+    [SerializeField] GameState _gameState;
+    public GameState _GameState { get { return _gameState; }
+                                  set { _gameState = value; }
+    //public GameState _GameState { get { return (GameState)Enum.ToObject(typeof(GameState), _gameState); ; }
+    //                              set { _gameState = (int)value; }
+}
+#endregion
 
-    public GameControllData(PlayerColor _firstTurn)
+public GameControllData(PlayerColor _firstTurn)
     {
         _activePlayerColor = _firstTurn;
         SetColor(PlayerColor.BLACK, PlayerColor.WHITE);
@@ -156,6 +158,7 @@ public abstract class OceloController
     }
 
     #region turnAction
+    //変更に追いつく
     protected void SyncGameProcess()
     {
         //ゲーム進行状況の更新
@@ -172,13 +175,17 @@ public abstract class OceloController
                 TurnAction_waitInput();
                 break;
             case GameControllData.GameState.SKIP:
-                _callback_skipTurn();
+                _callback_syncBanData?.Invoke();
+                _callback_syncPlayer?.Invoke();//現在のプレイヤーの更新
+                _callback_skipTurn?.Invoke();
                 break;
             case GameControllData.GameState.END:
+                _callback_syncBanData?.Invoke();
                 EndGame();
                 break;
         }
     }
+
 
     protected void JudgeAction()
     {
@@ -275,32 +282,14 @@ public abstract class OceloController
              { 0,0,0,0,0,0,0,0}//1
             ,{ 0,0,0,0,0,0,0,0}//2
             ,{ 0,0,0,0,0,0,0,0}//3
-            ,{ 0,0,0,1,2,0,0,0}//4
-            ,{ 0,0,0,2,1,0,0,0}//5
+            ,{ 0,0,0,2,1,0,0,0}//4
+            ,{ 0,0,0,1,2,0,0,0}//5
             ,{ 0,0,0,0,0,0,0,0}//6
             ,{ 0,0,0,0,0,0,0,0}//7
             ,{ 0,0,0,0,0,0,0,0}//8
         };
         _ban.SetBan(input);
     }
-
-    //void SetUpBan()
-    //{
-    //    var input = new int[,] {
-    //        // 1 2 3 4 5 6 7 8
-    //         { 0,0,0,0,0,0,0,0}//1
-    //        ,{ 0,0,0,0,0,0,0,0}//2
-    //        ,{ 0,0,0,0,0,0,0,0}//3
-    //        ,{ 0,0,0,1,2,0,0,0}//4
-    //        ,{ 0,0,0,2,1,0,0,0}//5
-    //        ,{ 0,0,0,0,0,0,0,0}//6
-    //        ,{ 0,0,0,0,0,0,0,0}//7
-    //        ,{ 0,0,0,0,0,0,0,0}//8
-    //    };
-    //    _ban.SetBan(input);
-
-    //    //TurnAction_display();
-    //}
 
     public void StartGame()
     {
@@ -362,6 +351,8 @@ public class LocalOceloController : OceloController
     {
         //TurnAction();
         PlChenge();
+
+
         JudgeAction();
         SyncGameProcess();
     }
@@ -376,76 +367,52 @@ public class RemoteOceloController : OceloController
     {
         _dataReciever = reciever;
     }
-    //ゲームの進行処理
-    //protected override void TurnAction()
-    //{
-    //    TurnAction_display();
-    //    TurnAction_swichPl();
-    //    //勝敗判定
-    //    TurnAction_judge(
-    //        () => TurnAction_waitInput(),
-    //        () =>
-    //        {
-    //            _callback_skipTurn?.Invoke();
-    //        },
-    //        () => EndGame());
-    //}
 
     protected override void InitAction()
     {
-        _callback_skipTurn += () =>{
-            PlChenge();
-            JudgeAction();
-            SyncGameProcess();
-            UpdateNCMBObjectData(_ncmbSendData._myNCMBObject);
-            _ncmbSendData.UpdateObject((obj) => {
-                _dataReciever.SendOceloMessage(OceloDataChannelReciever.messageCode_playUser);
-            });
-        };
     }
-
     //コマを置くことに成功したときに呼ばれる
     protected override void SetKomaAction()
     {
-        //TurnAction();
+        //盤面データの更新等
         PlChenge();
         JudgeAction();
-        SyncGameProcess();
+        SyncGameProcess();//こっちでやると自分の入力を入れてから表示更新までのラグが少なくなる
         //情報送信
         UpdateNCMBObjectData(_ncmbSendData._myNCMBObject);
         _ncmbSendData.UpdateObject((obj) => {
+            //SyncGameProcess();画面更新をこっちでやると相手との見ている画面のラグが少なくなる
             _dataReciever.SendOceloMessage(OceloDataChannelReciever.messageCode_playUser);
         });
     }
 
     //情報受信
+    //相手側では現在の状態への処理が済んでいる
     public void FetchGameState()
     {
         _ncmbSendData.FetchObject((obj) =>
         {
+            FetchNCMBObjectData(_ncmbSendData._myNCMBObject);
             SyncGameProcess();
-            if(_processData._GameState == GameControllData.GameState.END) _ncmbSendData.DeleteObject();
+            switch (_processData._GameState)
+            {
+                case GameControllData.GameState.SKIP://スキップだったら送り返す
+                    {
+                        PlChenge();
+                        JudgeAction();
+                        UpdateNCMBObjectData(_ncmbSendData._myNCMBObject);
+                        _ncmbSendData.UpdateObject((obj2) =>
+                        {
+                            SyncGameProcess();
+                            _dataReciever.SendOceloMessage(OceloDataChannelReciever.messageCode_playUser);
+                        });
+                    }
+                    break;
+                case GameControllData.GameState.END:
+                    _ncmbSendData.DeleteObject();
+                    break;
+            }
         });
-        //_ncmbSendData.FetchObject((obj)=> {
-        //    FetchNCMBObjectData(_ncmbSendData._myNCMBObject);
-        //    _callback_syncBanData?.Invoke();
-        //    _callback_syncPlayer?.Invoke();
-        //    //勝敗判定
-        //    //TurnAction_judge(
-        //    //    () => TurnAction_waitInput(),
-        //    //    () =>{
-        //    //        _callback_skipTurn?.Invoke();
-        //    //        TurnAction_swichPl();
-        //    //        UpdateNCMBObjectData(_ncmbSendData._myNCMBObject);
-        //    //        _ncmbSendData.UpdateObject((obj2) =>
-        //    //        {
-        //    //            _dataReciever.SendOceloMessage(OceloDataChannelReciever.messageCode_playUser);
-        //    //        });}, 
-        //    //    () =>{
-        //    //        EndGame();
-        //    //        _ncmbSendData.DeleteObject();}
-        //    //    );
-        //});
     }
     
     #region ncmb
