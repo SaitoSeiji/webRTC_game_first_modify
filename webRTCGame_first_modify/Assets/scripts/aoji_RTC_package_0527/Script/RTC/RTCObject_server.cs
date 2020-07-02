@@ -24,14 +24,19 @@ public class RTCObject_server : MonoBehaviour
     bool _IsOffer { get { return _rtcType == RTCTYPE.OFFER; } }
     public bool _connectRTC { get; private set; } = false;//接続が成立したかどうかを知らせる
 
-    [SerializeField] Text sendText;
+    [SerializeField] Camera _myCamera;
+    [SerializeField] RawImage _rtImage;
+    bool _isStartedVideoStream=false;
+    [SerializeField,Space] Text sendText;
     [SerializeField] Text recieveText;
     [SerializeField] AbstractDataChannelReciever _reciever;
 
     RTCPeerConnection localConnection;
     private RTCDataChannel localDataChannel;
     private RTCDataChannel remoteDataChannel;
+    private MediaStream _videoStream;
     List<RTCIceCandidate> _localIceCandidate = new List<RTCIceCandidate>();
+
 
     MatchingNCMB _matchingNCMB;
     NCMB_RTC _signalingNCMB { get { return _matchingNCMB._SignalingNCMB; } }
@@ -71,7 +76,6 @@ public class RTCObject_server : MonoBehaviour
         _matchingNCMB = GetComponent<MatchingNCMB>();
     }
 
-
     private void OnDestroy()
     {
         WebRTC.Finalize();
@@ -88,11 +92,25 @@ public class RTCObject_server : MonoBehaviour
             server
         };
         localConnection = new RTCPeerConnection(ref pc_config);
+        //データチャネルの作成
         RTCDataChannelInit conf = new RTCDataChannelInit(true);
         localDataChannel = localConnection.CreateDataChannel("send", ref conf);
         localDataChannel.OnOpen = new DelegateOnOpen(() => { Debug.Log("データチャネル:localOpen"); });
         localDataChannel.OnClose = new DelegateOnClose(() => { Debug.Log("データチャネル:localClose"); });
-        //localDataChannel.OnMessage = onDataChannelMessage;
+        //メディアストリームの追加(現在のバージョンだとメディアストリームは1つまでらしい)
+        if(_rtcType== RTCTYPE.OFFER)
+        {
+            _videoStream = _myCamera.CaptureStream(800, 450);
+            StartMediaStream(_videoStream);
+        }
+        else
+        {
+            localConnection.OnTrack = new DelegateOnTrack(x =>
+            {
+                Debug.LogWarning("track:"+x);
+                
+            });
+        }
         localConnection.OnDataChannel = new DelegateOnDataChannel(x => {
             Debug.Log("ondatachannel");
             remoteDataChannel = x;
@@ -117,6 +135,22 @@ public class RTCObject_server : MonoBehaviour
         Debug.Log("crete peer");
     }
 
+
+    void StartMediaStream(MediaStream e)
+    {
+        var senders = new List<RTCRtpSender>();
+        foreach (var track in e.GetTracks())
+        {
+            var sender = localConnection.AddTrack(track);
+            senders.Add(sender);
+        }
+        if (!_isStartedVideoStream)
+        {
+            StartCoroutine(WebRTC.Update());
+            _isStartedVideoStream = true;
+        }
+
+    }
     void SendSDP(RTCSessionDescription session,NCMBStateData.MyNCMBstate state)
     {
         bool isoffer = (session.type == RTCSdpType.Offer);
