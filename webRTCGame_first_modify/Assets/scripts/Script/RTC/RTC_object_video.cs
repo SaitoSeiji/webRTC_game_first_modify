@@ -7,19 +7,11 @@ using System.Linq;
 using NCMB;
 using System;
 using MyRTCEnum;
+using UnityEngine.Windows.WebCam;
 
-namespace MyRTCEnum
+public class RTC_object_video : MonoBehaviour
 {
-    public enum RTCTYPE
-    {
-        OFFER, ANSWER
-    }
-}
 
-
-[DisallowMultipleComponent]
-public class RTCObject_server : MonoBehaviour
-{
     [SerializeField] RTCTYPE _rtcType;
     public RTCTYPE _RtcType { get { return _rtcType; } }
     bool _IsOffer { get { return _rtcType == RTCTYPE.OFFER; } }
@@ -27,11 +19,14 @@ public class RTCObject_server : MonoBehaviour
 
     [SerializeField, Space] Text sendText;
     [SerializeField] Text recieveText;
+    [SerializeField] Camera _streamCamera;
+    [SerializeField] RawImage _streamImage;
     [SerializeField] AbstractDataChannelReciever _reciever;
 
     RTCPeerConnection localConnection;
     private RTCDataChannel localDataChannel;
     private RTCDataChannel remoteDataChannel;
+    MediaStream _videoStream;
     List<RTCIceCandidate> _localIceCandidate = new List<RTCIceCandidate>();
 
 
@@ -56,7 +51,7 @@ public class RTCObject_server : MonoBehaviour
         //メッセージ受信時の処理
         onDataChannelMessage = new DelegateOnMessage(bytes => {
             var text = System.Text.Encoding.UTF8.GetString(bytes);
-            if(recieveText!=null)recieveText.text = text;
+            if (recieveText != null) recieveText.text = text;
             if (_reciever != null)
             {
                 //始めて受け取るメッセージならAwakeMessageを呼ぶ
@@ -64,7 +59,7 @@ public class RTCObject_server : MonoBehaviour
                 else _reciever.AwakeMessage();
             }
             //未接続->answerは送り返す(answerする)
-            if (!_connectRTC&&_rtcType== RTCTYPE.ANSWER)
+            if (!_connectRTC && _rtcType == RTCTYPE.ANSWER)
             {
                 SendMsg_data("Connected");
             }
@@ -95,11 +90,19 @@ public class RTCObject_server : MonoBehaviour
         localDataChannel.OnOpen = new DelegateOnOpen(() => { Debug.Log("データチャネル:localOpen"); });
         localDataChannel.OnClose = new DelegateOnClose(() => { Debug.Log("データチャネル:localClose"); });
         //メディアストリームの追加(現在のバージョンだとメディアストリームは1つまでらしい)
-        
+        if(_rtcType== RTCTYPE.OFFER)
+        {
+            _videoStream = _streamCamera.CaptureStream(800,450);
+        }
+
         localConnection.OnDataChannel = new DelegateOnDataChannel(x => {
             Debug.Log("ondatachannel");
             remoteDataChannel = x;
             remoteDataChannel.OnMessage = onDataChannelMessage;
+        });
+        localConnection.OnTrack = new DelegateOnTrack(x => {
+             x.Track;
+            //PlayVideo(x.Track);
         });
         localConnection.OnIceConnectionChange =
             new DelegateOnIceConnectionChange(state => { OnIceConnectionChange(localConnection, state); });
@@ -120,31 +123,31 @@ public class RTCObject_server : MonoBehaviour
         Debug.Log("crete peer");
     }
 
-    void SendSDP(RTCSessionDescription session,NCMBStateData.MyNCMBstate state)
+    void SendSDP(RTCSessionDescription session, NCMBStateData.MyNCMBstate state)
     {
         bool isoffer = (session.type == RTCSdpType.Offer);
         var type = (isoffer) ? RTCSendData.DATATYPE.OFFERE : RTCSendData.DATATYPE.ANSWER;
-        var data = new RTCSendData(type,session.sdp);
+        var data = new RTCSendData(type, session.sdp);
         var json = JsonConverter.ToJson(data);
         var json_state = JsonConverter.ToJson(new NCMBStateData(state));
-        _signalingNCMB.FetchObject((NCMBObject obj)=>{
-            var saveobj= NCMB_RTC.SetJson_SDPData( obj, isoffer, json);
-            saveobj = NCMB_RTC.SetJson_connectState(saveobj,json_state);
+        _signalingNCMB.FetchObject((NCMBObject obj) => {
+            var saveobj = NCMB_RTC.SetJson_SDPData(obj, isoffer, json);
+            saveobj = NCMB_RTC.SetJson_connectState(saveobj, json_state);
             _signalingNCMB.UpdateObject(saveobj);
         });
-        
+
     }
 
-     void  RecieveSDP(Action<RTCSessionDescription> act)
+    void RecieveSDP(Action<RTCSessionDescription> act)
     {
         _signalingNCMB.FetchObject((obj) => {
-            
-            string json = NCMB_RTC.GetJson_SDPData(obj,_IsOffer);
+
+            string json = NCMB_RTC.GetJson_SDPData(obj, _IsOffer);
             var data = JsonConverter.FromJson<RTCSendData>(json);
             var result = new RTCSessionDescription();
             result.type = (_IsOffer) ? RTCSdpType.Answer : RTCSdpType.Offer;
             result.sdp = data._sdp;
-            act.Invoke( result);
+            act.Invoke(result);
         });
     }
 
@@ -170,7 +173,7 @@ public class RTCObject_server : MonoBehaviour
     {
         if (_rtcType != RTCTYPE.ANSWER) return;
         //var offer = ConvertText2desc(_recieveSDPText, true);
-        RecieveSDP((offer)=> {
+        RecieveSDP((offer) => {
             try
             {
                 Debug.Log($"recieve offer");
@@ -182,7 +185,7 @@ public class RTCObject_server : MonoBehaviour
                 Debug.Log("cant offer recieve");
             }
         });
-        
+
     }
 
     IEnumerator CreateAnswer()
@@ -194,7 +197,7 @@ public class RTCObject_server : MonoBehaviour
         var op5 = localConnection.SetLocalDescription(ref op4.desc);
         yield return op5;
         //TextSDP(op4.desc, _mySDPText);
-        SendSDP(op4.desc,NCMBStateData.MyNCMBstate.SENDED_answer);
+        SendSDP(op4.desc, NCMBStateData.MyNCMBstate.SENDED_answer);
         Debug.Log("create answer");
     }
 
@@ -202,7 +205,7 @@ public class RTCObject_server : MonoBehaviour
     {
         if (_rtcType != RTCTYPE.OFFER) return;
         //var answer = ConvertText2desc(_recieveSDPText, false);
-        RecieveSDP((answer)=> {
+        RecieveSDP((answer) => {
             try
             {
                 localConnection.SetRemoteDescription(ref answer);
@@ -226,9 +229,9 @@ public class RTCObject_server : MonoBehaviour
             json = JsonConverter.ToJson(data);
             var json_state = (_IsOffer) ? JsonConverter.ToJson(new NCMBStateData(NCMBStateData.MyNCMBstate.CONNECTED_sdp))
                                         : JsonConverter.ToJson(new NCMBStateData(NCMBStateData.MyNCMBstate.SENDED_ice));
-            var saveobj=NCMB_RTC.SetJson_SDPData( obj, _IsOffer, json);
+            var saveobj = NCMB_RTC.SetJson_SDPData(obj, _IsOffer, json);
             saveobj = NCMB_RTC.SetJson_connectState(saveobj, json_state);
-            
+
             _signalingNCMB.UpdateObject(saveobj);
             Debug.Log($"sendJson");
         });
@@ -238,10 +241,10 @@ public class RTCObject_server : MonoBehaviour
     {
         _signalingNCMB.FetchObject((obj) =>
         {
-            var json = NCMB_RTC.GetJson_SDPData(obj,_IsOffer);
+            var json = NCMB_RTC.GetJson_SDPData(obj, _IsOffer);
             var data = JsonConverter.FromJson<RTCSendData>(json);
             var remoteICE = new List<RTCIceCandidate>();
-            foreach(var target in data.candidateJson)
+            foreach (var target in data.candidateJson)
             {
                 remoteICE.Add(JsonConverter.FromJson<RTCIceCandidate>(target));
             }
@@ -305,7 +308,7 @@ public class RTCObject_server : MonoBehaviour
     #region public
     public void SendMsg_text()
     {
-        if(sendText!=null)localDataChannel.Send(sendText.text);
+        if (sendText != null) localDataChannel.Send(sendText.text);
     }
     public void SendMsg_data(string data)
     {
@@ -319,7 +322,15 @@ public class RTCObject_server : MonoBehaviour
     }
 
     #endregion
-    //裏方======================================
+    #region private
+
+    void PlayVideo(RenderTexture texture)
+    {
+        _streamImage.texture = texture;
+    }
+
+    #endregion
+    #region//裏方======================================
     void OnIceConnectionChange(RTCPeerConnection pc, RTCIceConnectionState state)
     {
         switch (state)
@@ -360,6 +371,5 @@ public class RTCObject_server : MonoBehaviour
         return (pc == localConnection) ? "localConnection" : "remoteConnection";
     }
 
-    
-
+    #endregion
 }
